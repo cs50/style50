@@ -49,7 +49,10 @@ class StyleChecker(object):
                 lines += results.lines
 
         if self.raw:
-            print(1 - diffs / lines)
+            try:
+                print(1 - diffs / lines)
+            except ZeroDivisionError:
+                print(0)
 
     def _check(self, file):
         """
