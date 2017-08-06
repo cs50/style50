@@ -1,5 +1,5 @@
-import re
 import io
+import re
 from tokenize import generate_tokens, STRING, INDENT, COMMENT
 
 import autopep8
