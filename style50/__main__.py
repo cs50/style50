@@ -5,7 +5,7 @@ import argparse
 import signal
 import sys
 
-from .core import StyleChecker
+from . import StyleChecker
 
 # require python 2.7+
 if sys.version_info < (2, 7):
