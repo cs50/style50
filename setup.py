@@ -10,7 +10,8 @@ setup(
         "Topic :: Utilities"
     ],
     description="This is style50, with which you can check code against the CS50 style guide",
-    install_requires=["argparse", "autopep8", "backports.shutil_get_terminal_size", "jsbeautifier", "six", "termcolor"],
+    install_requires=["argparse", "autopep8", "backports.shutil_get_terminal_size", "icdiff", "jsbeautifier", "six", "termcolor"],
+    dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
     packages=find_packages(),
