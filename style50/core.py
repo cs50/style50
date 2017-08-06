@@ -15,7 +15,7 @@ class StyleChecker(object):
     """
     Class which checks a list of files/directories for style.
     """
-    def __init__(self, paths, raw, **kwargs):
+    def __init__(self, paths, raw=False, unified=False):
         # Creates a generator of all the files found recursively in `paths`
         self.files = itertools.chain.from_iterable(
                         [path] if not os.path.isdir(path)
@@ -24,7 +24,7 @@ class StyleChecker(object):
                                     for file in files)
                         for path in paths)
         self.raw = raw
-        self.opts = kwargs
+        self.unified = unified
 
     def run(self):
         """
@@ -70,7 +70,7 @@ class StyleChecker(object):
             termcolor.cprint("unknown file type \"{}\", skipping...".format(file), "yellow", file=sys.stderr, end="")
         else:
             try:
-                return check(code, **self.opts)
+                return check(code, unified=self.unified)
             except Error as e:
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
         finally:
