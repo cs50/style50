@@ -4,11 +4,11 @@ from tokenize import generate_tokens, STRING, INDENT, COMMENT
 import autopep8
 import jsbeautifier
 
-from . import StyleCheckBase
+from . import StyleCheck
 
 
 
-class CStyleCheck(StyleCheckBase):
+class C(StyleCheck):
     extensions = [".c", ".h"]
 
     astyle = [
@@ -36,7 +36,7 @@ class CStyleCheck(StyleCheckBase):
         return self.run(self.astyle, input=code)
 
 
-class PyStyleCheck(StyleCheckBase):
+class Py(StyleCheck):
     extensions = [".py"]
 
     def count_comments(self, code):
@@ -53,8 +53,8 @@ class PyStyleCheck(StyleCheckBase):
         return autopep8.fix_code(code)
 
 
-# Inherit from CStyleCheck since counting comments is nearly the same, save more posibilities for literals
-class JsStyleCheck(CStyleCheck):
+# Inherit from C since counting comments is nearly the same, save more posibilities for literals
+class Js(C):
     extensions = [".js"]
 
     # Taken from http://code.activestate.com/recipes/496882-javascript-code-compression/
@@ -69,8 +69,7 @@ class JsStyleCheck(CStyleCheck):
     def style(self, code):
         return jsbeautifier.beautify(code)
 
-# Inhereit from CStyleCheck because comment counting is exactly the same (hopefully)
-class JavaStyleCheck(CStyleCheck):
+# Inhereit from C because comment counting is exactly the same (hopefully)
+class Java(C):
     extensions = [".java"]
-    astyle = CStyleCheck.astyle + ["--mode=java", "--style=java"]
-
+    astyle = C.astyle + ["--mode=java", "--style=java"]

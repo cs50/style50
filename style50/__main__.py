@@ -5,7 +5,7 @@ import argparse
 import signal
 import sys
 
-from . import StyleChecker
+from . import Style50
 
 # require python 2.7+
 if sys.version_info < (2, 7):
@@ -25,7 +25,7 @@ def main():
     parser.add_argument("-o", "--output", action="store", metavar="MODE",default="side-by-side", choices=["side-by-side", "unified", "raw", "json"], help="specify output mode")
 
     args = parser.parse_args()
-    StyleChecker(args.files, output=args.output).run()
+    Style50(args.files, output=args.output).run()
 
 # Necessary so `console_scripts` can extract the main function
 if __name__ == "__main__":

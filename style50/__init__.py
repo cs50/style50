@@ -1,4 +1,4 @@
-__all__ = ["StyleChecker", "checks", "StyleCheckBase"]
+__all__ = ["Style50", "checks", "StyleCheck"]
 
-from .core import StyleChecker, StyleCheckBase
+from .core import Style50, StyleCheck
 from . import checks
