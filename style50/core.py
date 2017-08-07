@@ -122,7 +122,7 @@ class Style50(object):
         """
         _, extension = os.path.splitext(file)
         try:
-            check = self.extension_map[extension]
+            check = self.extension_map[extension[1:]]
             with open(file) as f:
                 code = f.read()
         except (OSError, IOError) as e:

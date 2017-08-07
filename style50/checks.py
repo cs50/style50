@@ -9,7 +9,7 @@ from . import StyleCheck
 
 
 class C(StyleCheck):
-    extensions = [".c", ".h"]
+    extensions = ["c", "h", "cpp", "hpp"]
 
     astyle = [
        "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
@@ -37,7 +37,7 @@ class C(StyleCheck):
 
 
 class Python(StyleCheck):
-    extensions = [".py"]
+    extensions = ["py"]
 
     def count_comments(self, code):
         prev, comments = INDENT, 0
@@ -55,7 +55,7 @@ class Python(StyleCheck):
 
 # Inherit from C since counting comments is nearly the same, save more posibilities for literals
 class Js(C):
-    extensions = [".js"]
+    extensions = ["js"]
 
     # Taken from http://code.activestate.com/recipes/496882-javascript-code-compression/
     match_literals = re.compile(
@@ -71,5 +71,5 @@ class Js(C):
 
 # Inhereit from C because comment counting is exactly the same (hopefully)
 class Java(C):
-    extensions = [".java"]
+    extensions = ["java"]
     astyle = C.astyle + ["--mode=java", "--style=java"]
