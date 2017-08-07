@@ -55,7 +55,7 @@ class Python(StyleCheck):
 
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
-        return autopep8.fix_code(code, options={"aggressive": 3, "max_line_length": 100})
+        return autopep8.fix_code(code, options={"aggressive": 2, "max_line_length": 100})
 
 
 class Js(C):
