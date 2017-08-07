@@ -11,6 +11,15 @@ from . import StyleCheckBase
 class CStyleCheck(StyleCheckBase):
     extensions = [".c", ".h"]
 
+    command = [
+       "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
+       "--align-pointer=name", "--pad-comma",
+       "--pad-header", "--pad-oper",
+       "--convert-tabs", "--indent=spaces=4",
+       "--indent-continuation=1", "--indent-switches",
+       "--min-conditional-indent=1", "--style=allman"
+    ]
+
     # Match (1) /**/ comments, and (2) // comments.
     match_comments = re.compile(r"(\/\*.*?\*\/)|(\/\/[^\n]*)", re.DOTALL)
 
@@ -24,16 +33,8 @@ class CStyleCheck(StyleCheckBase):
         return sum(1 for _ in self.match_comments.finditer(stripped))
 
     def style(self, code):
-        command = [
-           "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
-           "--align-pointer=name", "--pad-comma",
-           "--pad-header", "--pad-oper",
-           "--convert-tabs", "--indent=spaces=4",
-           "--indent-continuation=1", "--indent-switches",
-           "--min-conditional-indent=1", "--style=allman"
-        ]
 
-        return self.run(command, input=code)
+        return self.run(self.command, input=code)
 
 
 class PyStyleCheck(StyleCheckBase):
@@ -68,3 +69,14 @@ class JsStyleCheck(CStyleCheck):
     # TODO: Determine which options, if any should be passed here
     def style(self, code):
         return jsbeautifier.beautify(code)
+
+# Inhereit from CStyleCheck because comment counting is exactly the same (hopefully)
+class JavaStyleCheck(CStyleCheck):
+    extensions = [".java"]
+
+    @classmethod
+    def _fix_command(cls):
+        cls.command[cls.command.index("--style=allman")] = "--style=java"
+        cls.command.append("--mode=java")
+
+JavaStyleCheck._fix_command()
