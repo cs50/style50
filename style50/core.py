@@ -18,7 +18,7 @@ import termcolor
 
 COLUMNS = get_terminal_size((80, 0))[0]
 
-class StyleChecker(object):
+class Style50(object):
     """
     Class which checks a list of files/directories for style.
     """
@@ -160,7 +160,7 @@ class StyleMeta(ABCMeta):
         cls = ABCMeta.__new__(mcls, name, bases, attrs)
         try:
             for ext in attrs.get("extensions", []):
-                StyleChecker.extension_map[ext] = cls
+                Style50.extension_map[ext] = cls
         except TypeError:
             # if `extensions` property isn't iterable, skip it
             pass
@@ -168,7 +168,7 @@ class StyleMeta(ABCMeta):
 
 # Python 2 and 3 handle metaclasses incompatibly
 @six.add_metaclass(StyleMeta)
-class StyleCheckBase(object):
+class StyleCheck(object):
     """
     Abstact base class for all style checks. All children must define `extensions` and
     implement `style`
