@@ -62,8 +62,7 @@ class StyleChecker(object):
             try:
                 results = self._check(file)
             except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
-                sys.stderr.flush()
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
             code = results.original
@@ -89,7 +88,7 @@ class StyleChecker(object):
             try:
                 results = self._check(file)
             except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
             checks[file] = {
@@ -110,7 +109,7 @@ class StyleChecker(object):
             try:
                 results = self._check(file)
             except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
         try:
