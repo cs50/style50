@@ -8,11 +8,6 @@ import jsbeautifier
 
 from . import StyleCheck
 
-if sys.version_info < (3, 0):
-    from io import BytesIO as StringIO
-else:
-    from io import StringIO
-
 
 class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
@@ -45,12 +40,15 @@ class Python(StyleCheck):
     extensions = ["py"]
 
     def count_comments(self, code):
-        prev_type, comments = INDENT, 0
-        with StringIO(code) as codeio:
-            for t_type, _, _, _, _ in generate_tokens(codeio.readline):
-                # Increment if token is comment or docstring
-                comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
-                prev_type = t_type
+        # Make sure we count docstring at top of module
+        prev_type = INDENT
+        comments = 0
+
+        code_lines = iter(code.splitlines(True))
+        for t_type, _, _, _, _ in generate_tokens(lambda: next(code_lines)):
+            # Increment if token is comment or docstring
+            comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
+            prev_type = t_type
         return comments
 
     # TODO: Determine which options (if any) should be passed to autopep8

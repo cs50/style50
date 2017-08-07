@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 
+# hello
 from abc import ABCMeta, abstractmethod, abstractproperty
 import errno
 import difflib
@@ -10,6 +11,7 @@ import os
 import subprocess
 import sys
 import tempfile
+
 
 from backports.shutil_get_terminal_size import get_terminal_size
 import icdiff
@@ -177,7 +179,11 @@ class StyleCheck(object):
         self.original = code
         comments = self.count_comments(code)
 
-        self.comment_ratio = 1. if comments is None else comments / self.count_lines(code)
+        try:
+            self.comment_ratio = 1. if comments is None else comments / self.count_lines(code)
+        except ZeroDivisionError:
+            raise Error("file is empty")
+
         self.styled = self.style(code)
 
         # Count number of differences between styled and unstyled code
