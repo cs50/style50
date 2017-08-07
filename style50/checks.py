@@ -41,7 +41,7 @@ class PyStyleCheck(StyleCheckBase):
 
     def count_comments(self, code):
         prev, comments = INDENT, 0
-        it = iter(code)
+        it = iter(code.splitlines())
         for t_type, _, _, _, _ in generate_tokens(lambda: next(it)):
             # Increment if token is comment or docstring
             comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
