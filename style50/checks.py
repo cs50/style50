@@ -36,7 +36,7 @@ class C(StyleCheck):
         return self.run(self.astyle, input=code)
 
 
-class Py(StyleCheck):
+class Python(StyleCheck):
     extensions = [".py"]
 
     def count_comments(self, code):
