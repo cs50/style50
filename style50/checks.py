@@ -1,4 +1,6 @@
+import io
 import re
+import sys
 from tokenize import generate_tokens, STRING, INDENT, COMMENT
 
 import autopep8
@@ -6,18 +8,22 @@ import jsbeautifier
 
 from . import StyleCheck
 
+if sys.version_info < (3, 0):
+    from io import BytesIO as StringIO
+else:
+    from io import StringIO
 
 
 class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
 
     astyle = [
-       "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
-       "--align-pointer=name", "--pad-comma",
-       "--pad-header", "--pad-oper",
-       "--convert-tabs", "--indent=spaces=4",
-       "--indent-continuation=1", "--indent-switches",
-       "--min-conditional-indent=1", "--style=allman"
+        "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
+        "--align-pointer=name", "--pad-comma",
+        "--pad-header", "--pad-oper", "--max-code-length=100",
+        "--convert-tabs", "--indent=spaces=4",
+        "--indent-continuation=1", "--indent-switches",
+        "--min-conditional-indent=1", "--style=allman"
     ]
 
     # Match (1) /**/ comments, and (2) // comments.
@@ -25,7 +31,6 @@ class C(StyleCheck):
 
     # Matches string literals.
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
-
 
     def count_comments(self, code):
         # Remove all string literals.
@@ -40,20 +45,19 @@ class Python(StyleCheck):
     extensions = ["py"]
 
     def count_comments(self, code):
-        prev, comments = INDENT, 0
-        it = iter(code.splitlines())
-        for t_type, _, _, _, _ in generate_tokens(lambda: next(it)):
-            # Increment if token is comment or docstring
-            comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
-            prev_type = t_type
+        prev_type, comments = INDENT, 0
+        with StringIO(code) as codeio:
+            for t_type, _, _, _, _ in generate_tokens(codeio.readline):
+                # Increment if token is comment or docstring
+                comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
+                prev_type = t_type
         return comments
 
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
-        return autopep8.fix_code(code)
+        return autopep8.fix_code(code, options={"aggressive": 3, "max_line_length": 100})
 
 
-# Inherit from C since counting comments is nearly the same, save more posibilities for literals
 class Js(C):
     extensions = ["js"]
 
@@ -69,7 +73,7 @@ class Js(C):
     def style(self, code):
         return jsbeautifier.beautify(code)
 
-# Inhereit from C because comment counting is exactly the same (hopefully)
+
 class Java(C):
     extensions = ["java"]
     astyle = C.astyle + ["--mode=java", "--style=java"]
