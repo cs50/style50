@@ -112,6 +112,9 @@ class StyleChecker(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
+            diffs += results.diffs
+            lines += results.lines
+
         try:
             print(1 - diffs / lines)
         except ZeroDivisionError:
