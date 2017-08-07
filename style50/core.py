@@ -25,15 +25,14 @@ class Style50(object):
     """
     extension_map = {}
 
-
     def __init__(self, paths, output="side-by-side"):
         # Creates a generator of all the files found recursively in `paths`
         self.files = itertools.chain.from_iterable(
-                        [path] if not os.path.isdir(path)
-                               else (os.path.join(root, file)
-                                    for root, _, files in os.walk(path)
-                                    for file in files)
-                        for path in paths)
+            [path] if not os.path.isdir(path)
+            else (os.path.join(root, file)
+                  for root, _, files in os.walk(path)
+                  for file in files)
+            for path in paths)
 
         # Set run function as apropriate for output mode
         if output == "side-by-side":
@@ -48,7 +47,6 @@ class Style50(object):
             self.run = self.run_json
         else:
             raise Error("invalid output type")
-
 
     def run_diff(self):
         """
@@ -65,7 +63,7 @@ class Style50(object):
                 continue
 
             if results.diffs:
-                print(*self.diff(results.original, results.style(results.original)), sep="\n")
+                print(*self.diff(results.original, results.styled), sep="\n")
             else:
                 termcolor.cprint("no style errors found", "green")
 
@@ -88,6 +86,7 @@ class Style50(object):
 
             checks[file] = {
                 "comments": results.comment_ratio >= results.COMMENT_MIN,
+                "comment_ratio": results.comment_ratio,
                 "styled": results.style(results.original)
             }
 
@@ -149,6 +148,7 @@ class Style50(object):
             else:
                 yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
 
+
 class StyleMeta(ABCMeta):
     """
     Metaclass which defines an abstract class and adds each extension that the
@@ -164,7 +164,7 @@ class StyleMeta(ABCMeta):
             pass
         return cls
 
-# Python 2 and 3 handle metaclasses incompatibly
+
 @six.add_metaclass(StyleMeta)
 class StyleCheck(object):
     """
@@ -175,28 +175,23 @@ class StyleCheck(object):
 
     def __init__(self, code):
         self.original = code
-        processed = self.preprocess(code)
+        comments = self.count_comments(code)
 
-        comments = self.count_comments(processed)
-
-        self.comment_ratio = 1. if comments is None else comments / (processed.count("\n") + 1)
-        styled = self.style(processed)
-        styled_lines = styled.splitlines()
+        self.comment_ratio = 1. if comments is None else comments / self.count_lines(code)
+        self.styled = self.style(code)
 
         # Count number of differences between styled and unstyled code
-        self.diffs = sum(1 for d in difflib.ndiff(processed.splitlines(), styled_lines) if d[0] == "+")
-        self.lines = len(styled_lines)
+        self.diffs = sum(d[0] == "+"
+                         for d in difflib.ndiff(code.splitlines(), self.styled.splitlines()))
+
+        self.lines = self.count_lines(self.styled)
         self.score = 1 - self.diffs / self.lines
 
-    def preprocess(self, code):
+    def count_lines(self, code):
         """
-        Remove blank lines from code, could be overriden in child class to do more
+        Count lines of code (by default ignores empty lines, but child could override to do more)
         """
-        code_lines = [line for line in code.splitlines() if line.strip()]
-        if not code_lines:
-            raise Error("can't style check empty files")
-
-        return "\n".join(code_lines)
+        return sum(1 for line in code.splitlines() if line.strip())
 
     @staticmethod
     def run(command, input=None, exit=0, shell=False):
@@ -209,7 +204,8 @@ class StyleCheck(object):
 
         stdin = {} if input is None else {"stdin": subprocess.PIPE}
         try:
-            child = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **stdin)
+            child = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, **stdin)
         except (OSError, IOError) as e:
             if e.errno == errno.ENOENT:
                 name = command.split(' ', 1)[0] if isinstance(command, str) else command[0]
