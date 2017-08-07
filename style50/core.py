@@ -56,7 +56,7 @@ class Style50(object):
         """
         sep = "-" * COLUMNS
         for file in self.files:
-            termcolor.cprint("{0}\n{1}\n{0}".format(sep, file), "blue")
+            termcolor.cprint("{0}\n{1}\n{0}".format(sep, file), "cyan")
 
             try:
                 results = self._check(file)
