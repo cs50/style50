@@ -22,13 +22,11 @@ def main():
     # Define command-line arguments.
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="*", help="files/directories to lint", default=["."])
-    parser.add_argument("-r", "--raw", action="store_true")
-    parser.add_argument("-u", "--unified", action="store_true")
-    parser.add_argument("-j", "--json", action="store_true")
-
+    parser.add_argument("-o", "--output", action="store", metavar="MODE",default="side-by-side", choices=["side-by-side", "unified", "raw", "json"], help="specify output mode")
 
     args = parser.parse_args()
-    StyleChecker(args.files, raw=args.raw, unified=args.unified).run()
+    print(args.output)
+    StyleChecker(args.files, output=args.output).run()
 
 # Necessary so `console_scripts` can extract the main function
 if __name__ == "__main__":

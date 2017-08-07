@@ -12,9 +12,11 @@ import sys
 import tempfile
 
 from backports.shutil_get_terminal_size import get_terminal_size
+import icdiff
 import six
 import termcolor
 
+COLUMNS = get_terminal_size((80, 0))[0]
 
 class StyleChecker(object):
     """
@@ -22,7 +24,8 @@ class StyleChecker(object):
     """
     extension_map = {}
 
-    def __init__(self, paths, raw=False, unified=False):
+
+    def __init__(self, paths, output="side-by-side"):
         # Creates a generator of all the files found recursively in `paths`
         self.files = itertools.chain.from_iterable(
                         [path] if not os.path.isdir(path)
@@ -30,41 +33,95 @@ class StyleChecker(object):
                                     for root, _, files in os.walk(path)
                                     for file in files)
                         for path in paths)
-        self.raw = raw
-        self.unified = unified
 
-    def run(self):
+        # Set run function as apropriate for output mode
+        if output == "side-by-side":
+            self.run = self.run_diff
+            self.diff = self.side_by_side
+        elif output == "unified":
+            self.run = self.run_diff
+            self.diff = self.unified
+        elif output == "raw":
+            self.run = self.run_raw
+        elif output == "json":
+            self.run = self.run_json
+        else:
+            raise Error("invalid output type")
+
+
+    def run_diff(self):
         """
-        Run the style checker on the paths it was initialized with
+        Run checks on self.files, printing diff of styled/unstyled output to stdout.
         """
-        sep = "-" * get_terminal_size((80, 0))[0]
+        sep = "-" * COLUMNS
+        for file in self.files:
+            termcolor.cprint(sep, "blue")
+            termcolor.cprint(file, "blue")
+            termcolor.cprint(sep, "blue")
+
+            try:
+                results = self._check(file)
+            except Error as e:
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
+                sys.stderr.flush()
+                continue
+
+            code = results.original
+            diff = self.diff(code, results.style(code))
+            try:
+                print(next(diff))
+            except StopIteration:
+                termcolor.cprint("no style errors found", "green")
+            else:
+                print(*diff, sep="\n")
+
+            if results.comment_ratio < results.COMMENT_MIN:
+                termcolor.cprint("Warning: It looks like you don't have very many comments; "
+                                 "this may bring down your final score.", "yellow")
+
+    def run_json(self):
+        """
+        Run checks on self.files, printing json object
+        containing information relavent to the IDE plugin at the end.
+        """
+        checks = {}
+        for file in self.files:
+            try:
+                results = self._check(file)
+            except Error as e:
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
+                continue
+
+            checks[file] = {
+                "comments": results.comment_ratio >= results.COMMENT_MIN,
+                "styled": results.style(results.original)
+            }
+
+        json.dump(checks, sys.stdout)
+
+    def run_raw(self):
+        """
+        Run checks on self.files, printing raw percentage to stdout.
+        """
         diffs = 0
         lines = 0
         for file in self.files:
-            if not self.raw:
-                # Print diff header
-                termcolor.cprint(sep, "blue")
-                termcolor.cprint(file, "blue")
-                termcolor.cprint(sep, "blue")
 
-            results = self._check(file)
-
-            if results:
-                if not self.raw:
-                    results.print_results()
-                diffs += results.diffs
-                lines += results.lines
-
-        if self.raw:
             try:
-                print(1 - diffs / lines)
-            except ZeroDivisionError:
-                print(0)
+                results = self._check(file)
+            except Error as e:
+                termcolor.cprint(e.msg, "yellow", file=sys.stderr, end="")
+                continue
+
+        try:
+            print(1 - diffs / lines)
+        except ZeroDivisionError:
+            print(0)
 
     def _check(self, file):
         """
-        Run apropriate check based on `file`'s extension and return it, writing to stderr if `file`
-        does not exist or if extension is unsupported
+        Run apropriate check based on `file`'s extension and return it,
+        otherwise raise an Error
         """
         _, extension = os.path.splitext(file)
         try:
@@ -73,18 +130,28 @@ class StyleChecker(object):
                 code = f.read()
         except (OSError, IOError) as e:
             if e.errno == errno.ENOENT:
-                termcolor.cprint("file \"{}\" not found".format(file), "yellow", file=sys.stderr, end="")
+                raise Error("file \"{}\" not found".format(file))
             else:
                 raise
         except KeyError:
-            termcolor.cprint("unknown file type \"{}\", skipping...".format(file), "yellow", file=sys.stderr, end="")
+            raise Error("unknown file type \"{}\", skipping...".format(file))
         else:
-            try:
-                return check(code, unified=self.unified)
-            except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
-        finally:
-            sys.stderr.flush()
+            return check(code)
+
+    @staticmethod
+    def side_by_side(old, new):
+        return icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines())
+
+    @staticmethod
+    def unified(old, new):
+        red, green, clear = u"\u001b[1;31m", u"\u001b[1;32m", u"\u001b[0m"
+        for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
+            if diff[0] == " ":
+                yield diff
+            elif diff[0] == "?":
+                continue
+            else:
+                yield "{}{}{}".format(red if diff[0] == "-" else green, diff, clear)
 
 class StyleMeta(ABCMeta):
     """
@@ -110,26 +177,8 @@ class StyleCheckBase(object):
     """
     COMMENT_MIN = 0.1
 
-    def __init__(self, code, unified=False):
-        self.code = code
-        self.styled = self.style(code)
-
-        # Run check.
-        self.check(code)
-
-        if unified:
-            red, green, clear = u"\u001b[1;31m", u"\u001b[1;32m", u"\u001b[0m"
-            self.diff_cmd = ["diff", "-d",
-                              "--new-line-format={}+ %L{}".format(green,clear),
-                              "--old-line-format={}- %L{}".format(red, clear),
-                              "--unchanged-line-format=  %L"]
-        else:
-            self.diff_cmd = ["icdiff", "-W", "--no-headers"]
-
-    def check(self, code):
-        """
-        Run checks on code.
-        """
+    def __init__(self, code):
+        self.original = code
         processed = self.preprocess(code)
 
         comments = self.count_comments(processed)
@@ -139,9 +188,9 @@ class StyleCheckBase(object):
         styled_lines = styled.splitlines()
 
         # Count number of differences between styled and unstyled code
-        diffs = sum(1 for d in difflib.ndiff(processed.splitlines(), styled_lines) if d[0] == "+")
-        self.diffs = diffs
+        self.diffs = sum(1 for d in difflib.ndiff(processed.splitlines(), styled_lines) if d[0] == "+")
         self.lines = len(styled_lines)
+        self.score = 1 - self.diffs / self.lines
 
     def preprocess(self, code):
         """
@@ -154,44 +203,6 @@ class StyleCheckBase(object):
         return "\n".join(code_lines)
 
 
-    def print_results(self):
-        """
-        Print diff of styled vs unstyled output, warning about comments if applicable
-        """
-        diff = self.diff()
-        if diff:
-            print(diff)
-        else:
-            termcolor.cprint("no style errors found", "green")
-
-        if self.comment_ratio < self.COMMENT_MIN:
-            termcolor.cprint("Warning: It looks like you may not have very many comments. "
-                             "This may bring down your final score.", "yellow")
-
-    def jsonify(self):
-        """
-        Create json object out of check containing fields relavent to IDE plugin
-        """
-        return json.dumps(dict(comments=self.comment_ratio > self.COMMENT_MIN,
-                               comment_ratio=self.comment_ratio,
-                               styled=self.styled))
-
-
-    #TODO: Figure out how not to have to write to disk
-    def diff(self):
-        """
-        Return diff (as created by running self.diff_cmd) of original and styled code
-        """
-        with tempfile.NamedTemporaryFile(mode="w") as styled_file, \
-                tempfile.NamedTemporaryFile(mode="w") as orig_file:
-
-            orig_file.write(self.code)
-            orig_file.flush()
-
-            styled_file.write(self.styled)
-            styled_file.flush()
-            command = self.diff_cmd + [orig_file.name, styled_file.name]
-            return self.run(command, exit=None).rstrip()
 
     @staticmethod
     def run(command, input=None, exit=0, shell=False):
