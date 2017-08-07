@@ -55,9 +55,7 @@ class StyleChecker(object):
         """
         sep = "-" * COLUMNS
         for file in self.files:
-            termcolor.cprint(sep, "blue")
-            termcolor.cprint(file, "blue")
-            termcolor.cprint(sep, "blue")
+            termcolor.cprint("{0}\n{1}\n{0}".format(sep, file), "blue")
 
             try:
                 results = self._check(file)
@@ -65,8 +63,7 @@ class StyleChecker(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
-            code = results.original
-            diff = self.diff(code, results.style(code))
+            diff = self.diff(results.original, results.style(results.original))
             try:
                 print(next(diff))
             except StopIteration:
@@ -146,14 +143,13 @@ class StyleChecker(object):
 
     @staticmethod
     def unified(old, new):
-        red, green, clear = u"\u001b[1;31m", u"\u001b[1;32m", u"\u001b[0m"
         for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
             if diff[0] == " ":
                 yield diff
             elif diff[0] == "?":
                 continue
             else:
-                yield "{}{}{}".format(red if diff[0] == "-" else green, diff, clear)
+                yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
 
 class StyleMeta(ABCMeta):
     """
@@ -204,8 +200,6 @@ class StyleCheckBase(object):
 
         return "\n".join(code_lines)
 
-
-
     @staticmethod
     def run(command, input=None, exit=0, shell=False):
         """
@@ -246,9 +240,11 @@ class StyleCheckBase(object):
         Returns a styled version of `code`.
         """
 
+
 class Error(Exception):
     def __init__(self, msg):
         self.msg = msg
+
 
 class DependencyError(Error):
     def __init__(self, dependency):
