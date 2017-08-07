@@ -18,6 +18,7 @@ import icdiff
 import six
 import termcolor
 
+
 COLUMNS = get_terminal_size((80, 0))[0]
 
 
@@ -28,7 +29,7 @@ class Style50(object):
     extension_map = {}
 
     def __init__(self, paths, output="side-by-side"):
-        # Creates a generator of all the files found recursively in `paths`
+        # Creates a generator of all the files found recursively in `paths`.
         self.files = itertools.chain.from_iterable(
             [path] if not os.path.isdir(path)
             else (os.path.join(root, file)
@@ -36,7 +37,7 @@ class Style50(object):
                   for file in files)
             for path in paths)
 
-        # Set run function as apropriate for output mode
+        # Set run function as apropriate for output mode.
         if output == "side-by-side":
             self.run = self.run_diff
             self.diff = self.side_by_side
@@ -138,10 +139,16 @@ class Style50(object):
 
     @staticmethod
     def side_by_side(old, new):
+        """
+        Returns a generator yielding the side-by-side diff of `old` and `new`).
+        """
         return icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines())
 
     @staticmethod
     def unified(old, new):
+        """
+        Returns a generator yielding a unified diff between `old` and `new`.
+        """
         for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
             if diff[0] == " ":
                 yield diff
@@ -159,10 +166,11 @@ class StyleMeta(ABCMeta):
     def __new__(mcls, name, bases, attrs):
         cls = ABCMeta.__new__(mcls, name, bases, attrs)
         try:
+            # Register class as the check for each of its extensions.
             for ext in attrs.get("extensions", []):
                 Style50.extension_map[ext] = cls
         except TypeError:
-            # if `extensions` property isn't iterable, skip it
+            # If `extensions` property isn't iterable, skip it.
             pass
         return cls
 
@@ -171,7 +179,7 @@ class StyleMeta(ABCMeta):
 class StyleCheck(object):
     """
     Abstact base class for all style checks. All children must define `extensions` and
-    implement `style`
+    implement `style`.
     """
     COMMENT_MIN = 0.1
 
@@ -180,13 +188,14 @@ class StyleCheck(object):
         comments = self.count_comments(code)
 
         try:
+            # Avoid warning about comments if we don't knowhow to count them.
             self.comment_ratio = 1. if comments is None else comments / self.count_lines(code)
         except ZeroDivisionError:
             raise Error("file is empty")
 
         self.styled = self.style(code)
 
-        # Count number of differences between styled and unstyled code
+        # Count number of differences between styled and unstyled code.
         self.diffs = sum(d[0] == "+"
                          for d in difflib.ndiff(code.splitlines(), self.styled.splitlines()))
 
@@ -195,7 +204,7 @@ class StyleCheck(object):
 
     def count_lines(self, code):
         """
-        Count lines of code (by default ignores empty lines, but child could override to do more)
+        Count lines of code (by default ignores empty lines, but child could override to do more).
         """
         return sum(1 for line in code.splitlines() if line.strip())
 
@@ -203,17 +212,19 @@ class StyleCheck(object):
     def run(command, input=None, exit=0, shell=False):
         """
         Run `command` passing it stdin from `input`, throwing a DependencyError if comand is not found.
-        Throws Error if exit code of command is not `exit` (unless `exit` is None)
+        Throws Error if exit code of command is not `exit` (unless `exit` is None).
         """
         if isinstance(input, str):
             input = input.encode()
 
+        # Only pipe stdin if we have input to pipe.
         stdin = {} if input is None else {"stdin": subprocess.PIPE}
         try:
             child = subprocess.Popen(command, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, **stdin)
         except (OSError, IOError) as e:
             if e.errno == errno.ENOENT:
+                # Extract name of command.
                 name = command.split(' ', 1)[0] if isinstance(command, str) else command[0]
                 e = DependencyError(name)
             raise e
@@ -225,13 +236,13 @@ class StyleCheck(object):
 
     def count_comments(self, code):
         """
-        Returns number of coments in `code`. If not implemented by child, will not warn about comments
+        Returns number of coments in `code`. If not implemented by child, will not warn about comments.
         """
 
     @abstractproperty
     def extensions(self):
         """
-        List of file extensions that check should be run on
+        List of file extensions that check should be run on.
         """
 
     @abstractmethod
