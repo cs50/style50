@@ -11,7 +11,7 @@ from . import StyleCheckBase
 class CStyleCheck(StyleCheckBase):
     extensions = [".c", ".h"]
 
-    command = [
+    astyle = [
        "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
        "--align-pointer=name", "--pad-comma",
        "--pad-header", "--pad-oper",
@@ -33,8 +33,7 @@ class CStyleCheck(StyleCheckBase):
         return sum(1 for _ in self.match_comments.finditer(stripped))
 
     def style(self, code):
-
-        return self.run(self.command, input=code)
+        return self.run(self.astyle, input=code)
 
 
 class PyStyleCheck(StyleCheckBase):
@@ -73,10 +72,5 @@ class JsStyleCheck(CStyleCheck):
 # Inhereit from CStyleCheck because comment counting is exactly the same (hopefully)
 class JavaStyleCheck(CStyleCheck):
     extensions = [".java"]
+    astyle = CStyleCheck.astyle + ["--mode=java", "--style=java"]
 
-    @classmethod
-    def _fix_command(cls):
-        cls.command[cls.command.index("--style=allman")] = "--style=java"
-        cls.command.append("--mode=java")
-
-JavaStyleCheck._fix_command()
