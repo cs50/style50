@@ -18,6 +18,7 @@ import termcolor
 
 COLUMNS = get_terminal_size((80, 0))[0]
 
+
 class Style50(object):
     """
     Class which checks a list of files/directories for style.
@@ -63,13 +64,10 @@ class Style50(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
-            diff = self.diff(results.original, results.style(results.original))
-            try:
-                print(next(diff))
-            except StopIteration:
-                termcolor.cprint("no style errors found", "green")
+            if results.diffs:
+                print(*self.diff(results.original, results.style(results.original)), sep="\n")
             else:
-                print(*diff, sep="\n")
+                termcolor.cprint("no style errors found", "green")
 
             if results.comment_ratio < results.COMMENT_MIN:
                 termcolor.cprint("Warning: It looks like you don't have very many comments; "
