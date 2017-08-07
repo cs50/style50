@@ -25,7 +25,6 @@ def main():
     parser.add_argument("-o", "--output", action="store", metavar="MODE",default="side-by-side", choices=["side-by-side", "unified", "raw", "json"], help="specify output mode")
 
     args = parser.parse_args()
-    print(args.output)
     StyleChecker(args.files, output=args.output).run()
 
 # Necessary so `console_scripts` can extract the main function
