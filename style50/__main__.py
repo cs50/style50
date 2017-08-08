@@ -5,6 +5,8 @@ import argparse
 import signal
 import sys
 
+import termcolor
+
 from . import Style50
 
 # require python 2.7+
@@ -33,4 +35,10 @@ def main():
 
 # Necessary so `console_scripts` can extract the main function
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        termcolor.cprint("Sorry, something's wrong! "
+                         "Let sysadmins@cs50.harvard.edu know!",
+                         "red", file=sys.stderr)
+        sys.exit(1)
