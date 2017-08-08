@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import division
 
-# hello
 from abc import ABCMeta, abstractmethod, abstractproperty
 import errno
 import difflib
