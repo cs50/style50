@@ -12,13 +12,33 @@ import sys
 import tempfile
 
 
-from backports.shutil_get_terminal_size import get_terminal_size
 import icdiff
 import six
 import termcolor
 
 
-COLUMNS = get_terminal_size((80, 0))[0]
+def get_terminal_size(fallback=(80, 24)):
+    """
+    Return tuple containing columns and rows of controlling terminal
+    Tries harder than shutil.get_terminal_size to find a tty before returning fallback
+
+    Theoretically, stdout, stderr, and stdin could all be different ttys which could
+    cause us to get the wrong measurements (instead of using the fallback) but the much more
+    common case is that output/error/input are just being piped
+    """
+    for stream in [sys.stdout, sys.stderr, sys.stdin]:
+        try:
+            columns, lines = os.get_terminal_size(stream.fileno())
+        except OSError:
+            continue
+        else:
+            break
+    else:
+        columns, lines = fallback
+    return columns, lines
+
+
+COLUMNS, LINES = get_terminal_size()
 
 
 class Style50(object):
@@ -72,6 +92,8 @@ class Style50(object):
             if results.comment_ratio < results.COMMENT_MIN:
                 termcolor.cprint("Warning: It looks like you don't have very many comments; "
                                  "this may bring down your final score.", "yellow")
+
+            open("file.txt", "w").write(results.styled)
 
     def run_json(self):
         """
