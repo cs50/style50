@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+import cgi
 import errno
 import difflib
 import itertools
@@ -93,8 +94,6 @@ class Style50(object):
                 termcolor.cprint("Warning: It looks like you don't have very many comments; "
                                  "this may bring down your final score.", "yellow")
 
-            open("file.txt", "w").write(results.styled)
-
     def run_json(self):
         """
         Run checks on self.files, printing json object
@@ -110,8 +109,7 @@ class Style50(object):
 
             checks[file] = {
                 "comments": results.comment_ratio >= results.COMMENT_MIN,
-                "comment_ratio": results.comment_ratio,
-                "styled": results.style(results.original)
+                "diff": "<pre>{}</pre>".format("".join(self._html_diff(results.original, results.styled))),
             }
 
         json.dump(checks, sys.stdout)
@@ -177,6 +175,36 @@ class Style50(object):
                 continue
             else:
                 yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
+
+    @staticmethod
+    def _html_diff(old, new):
+        """
+        Returns a generator over an HTML-formatted char-based diff.
+        Not line based so not a suitable replacement for seld.diff
+        """
+        differ = difflib.ndiff(old, new)
+        # Type of difference.
+        dtype = None
+        # List diffs of same type.
+        buffer = []
+        while True:
+            # Get next diff or None if we're at the end
+            d = next(differ, (None,))
+            if d[0] != dtype:
+                if buffer:
+                    # Escape HTML.
+                    content = cgi.escape("".join(buffer), quote=True)
+                    if dtype == " ":
+                        yield content
+                    else:
+                        yield "<{0}>{1}</{0}>".format("ins" if dtype == "+"
+                                                   else "del", content)
+                dtype = d[0]
+                buffer.clear()
+
+            if dtype is None:
+                break
+            buffer.append(d[2:])
 
 
 class StyleMeta(ABCMeta):
