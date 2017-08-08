@@ -20,8 +20,8 @@ def handler(number, frame):
     sys.exit(1)
 
 
-def excepthook(type, value, tb):
-    if type is Error:
+def excepthook(etype, value, tb):
+    if etype is Error:
         termcolor.cprint(value.msg, "red", file=sys.stderr)
     else:
         termcolor.cprint("Sorry, something's wrong! "
@@ -35,7 +35,7 @@ def excepthook(type, value, tb):
         verbose = True
 
     if verbose:
-        traceback.print_tb(tb)
+        traceback.print_exception(etype, value, tb)
 
 
 # Set global exception handler.
