@@ -181,7 +181,9 @@ class StyleCheck(object):
     Abstact base class for all style checks. All children must define `extensions` and
     implement `style`.
     """
-    COMMENT_MIN = 0.1
+
+    # Warn if fewer than 10% of code is comments.
+    COMMENT_MIN = 0.10
 
     def __init__(self, code):
         self.original = code
