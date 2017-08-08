@@ -19,12 +19,12 @@ import termcolor
 
 def get_terminal_size(fallback=(80, 24)):
     """
-    Return tuple containing columns and rows of controlling terminal
-    Tries harder than shutil.get_terminal_size to find a tty before returning fallback
+    Return tuple containing columns and rows of controlling terminal, trying harder
+    than shutil.get_terminal_size to find a tty before returning fallback.
 
     Theoretically, stdout, stderr, and stdin could all be different ttys which could
     cause us to get the wrong measurements (instead of using the fallback) but the much more
-    common case is that output/error/input are just being piped
+    common case is that IO is piped.
     """
     for stream in [sys.stdout, sys.stderr, sys.stdin]:
         try:
