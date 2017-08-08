@@ -4,18 +4,42 @@ from __future__ import division
 import argparse
 import signal
 import sys
+import traceback
 
 import termcolor
 
-from . import Style50
+from . import Style50, Error
 
-# require python 2.7+
+# require python 2.7+.
 if sys.version_info < (2, 7):
     sys.exit("You have an old version of python. Install version 2.7 or higher.")
 
 
+# Exit zero on Ctrl-C.
 def handler(number, frame):
     sys.exit(1)
+
+
+def excepthook(type, value, tb):
+    if type is Error:
+        termcolor.cprint(value.msg, "red", file=sys.stderr)
+    else:
+        termcolor.cprint("Sorry, something's wrong! "
+                         "Let sysadmins@cs50.harvard.edu know!",
+                         "red", file=sys.stderr)
+
+    # Main might not have initialized args yet.
+    try:
+        verbose = main.args.verbose
+    except AttributeError:
+        verbose = True
+
+    if verbose:
+        traceback.print_tb(tb)
+
+
+# Set global exception handler.
+sys.excepthook = excepthook
 
 
 def main():
@@ -28,17 +52,13 @@ def main():
     parser.add_argument("-o", "--output", action="store", default="side-by-side",
                         choices=["side-by-side", "unified", "raw", "json"], metavar="MODE",
                         help="specify output mode")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="print full tracebacks of errors")
 
-    args = parser.parse_args()
-    Style50(args.files, output=args.output).run()
+    main.args = parser.parse_args()
+    Style50(main.args.files, output=main.args.output).run()
 
 
 # Necessary so `console_scripts` can extract the main function
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        termcolor.cprint("Sorry, something's wrong! "
-                         "Let sysadmins@cs50.harvard.edu know!",
-                         "red", file=sys.stderr)
-        sys.exit(1)
+    main()
