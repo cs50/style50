@@ -9,11 +9,12 @@ setup(
         "Topic :: Education",
         "Topic :: Utilities"
     ],
-    description="This is style50, with which you can check code against the CS50 style guide",
+    description="This is style50, with which code can be checked against the CS50 style guide",
     install_requires=["argparse", "autopep8", "icdiff", "jsbeautifier", "six", "termcolor"],
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
+    license="MIT",
     packages=find_packages(),
     entry_points={
         "console_scripts": ["style50=style50.__main__:main"],
