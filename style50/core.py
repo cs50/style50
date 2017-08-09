@@ -134,7 +134,7 @@ class Style50(object):
         try:
             print(1 - diffs / lines)
         except ZeroDivisionError:
-            print(0)
+            print(0.0)
 
     def _check(self, file):
         """
