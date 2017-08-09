@@ -198,7 +198,7 @@ class Style50(object):
                         yield content
                     else:
                         yield "<{0}>{1}</{0}>".format("ins" if dtype == "+"
-                                                   else "del", content)
+                                                      else "del", content)
                 dtype = d[0]
                 buffer.clear()
 
