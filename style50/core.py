@@ -5,10 +5,13 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import cgi
 import errno
 import difflib
+import fcntl
 import itertools
 import json
 import os
+import struct
 import subprocess
+from termios import TIOCGWINSZ
 import sys
 import tempfile
 
@@ -16,7 +19,6 @@ import tempfile
 import icdiff
 import six
 import termcolor
-
 
 def get_terminal_size(fallback=(80, 24)):
     """
@@ -27,15 +29,19 @@ def get_terminal_size(fallback=(80, 24)):
     cause us to get the wrong measurements (instead of using the fallback) but the much more
     common case is that IO is piped.
     """
-    for stream in [sys.stdout, sys.stderr, sys.stdin]:
+    for stream in [sys.__stdout__, sys.__stderr__, sys.__stdin__]:
         try:
-            columns, lines = os.get_terminal_size(stream.fileno())
-        except OSError:
-            continue
+            # Make WINSIZE call to terminal
+            data = fcntl.ioctl(stream.fileno(), TIOCGWINSZ, b"\x00\x00\00\x00")
+        except (IOError, OSError):
+            pass
         else:
+            # Unpack two shorts from ioctl call
+            lines, columns = struct.unpack("hh", data)
             break
     else:
         columns, lines = fallback
+
     return columns, lines
 
 
