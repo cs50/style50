@@ -28,11 +28,12 @@ optional arguments:
 
 ## Language Support
 `style50` currently supports the following languages:
-    * C
-    * C++
-    * Python
-    * Javascript
-    * Java
+
+* C
+* C++
+* Python
+* Javascript
+* Java
 
 ### Adding a new language
 
