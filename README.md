@@ -66,6 +66,6 @@ All classes which inherit from `StyleCheck` are automatically registered with `s
 
 ```python
 # Style check the current directory, printing a unified diff
-Style50(".", output="unified").run()
+Style50(["."], output="unified").run()
 
 ```
