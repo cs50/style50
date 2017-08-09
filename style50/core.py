@@ -15,10 +15,10 @@ from termios import TIOCGWINSZ
 import sys
 import tempfile
 
-
 import icdiff
 import six
 import termcolor
+
 
 def get_terminal_size(fallback=(80, 24)):
     """
