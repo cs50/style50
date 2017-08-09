@@ -210,7 +210,7 @@ class Style50(object):
 class StyleMeta(ABCMeta):
     """
     Metaclass which defines an abstract class and adds each extension that the
-    class supports to the global extension_map dictionary.
+    class supports to the Style50's extension_map
     """
     def __new__(mcls, name, bases, attrs):
         cls = ABCMeta.__new__(mcls, name, bases, attrs)
