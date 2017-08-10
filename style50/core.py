@@ -215,7 +215,7 @@ class Style50(object):
         """
         def fmt_html(content, dtype):
             content = cgi.escape(content, quote=True)
-            return content if dtype == " " else "<{1}><{0}></{1}>".format(content, "ins" if dtype == "+" else "del")
+            return content if dtype == " " else "<{1}>{0}</{1}>".format(content, "ins" if dtype == "+" else "del")
 
         return self._char_diff(old, new, fmt_html)
 
