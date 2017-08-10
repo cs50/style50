@@ -198,20 +198,25 @@ class Style50(object):
         """
         Return HTML formatted character-based diff between old and new (used for IDE).
         """
-        return self._char_diff(old, new, lambda s, d: "<{1}>{0}</{1}>".format(cgi.escape(s, quote=True),
-                                                                              "ins" if d == "+" else "del"))
+        def fmt_html(content, dtype):
+            content = cgi.escape(content, quote=True)
+            return content if dtype == " " else "<{1}><{0}></{1}>".format(content, "ins" if dtype == "+" else "del")
+
+        return self._char_diff(old, new, fmt_html)
 
     def char_diff(self, old, new):
         """
         Return color-coded character-based diff between `old` and `new`.
         """
-        return self._char_diff(old, new, lambda s, d: termcolor.colored(s, None, "on_green" if d == "+" else "on_red"))
+        def fmt_color(content, dtype):
+            return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
+        return self._char_diff(old, new, fmt_color)
 
     @staticmethod
     def _char_diff(old, new, fmt):
         """
-        Returns a char-based diff between `old` and `new` where insertions/deletions
-        are formatted by `fmt`
+        Returns a char-based diff between `old` and `new` where blocks are
+        formatted by `fmt`.
         """
         differ = difflib.ndiff(old, new)
         # Type of difference.
@@ -222,19 +227,17 @@ class Style50(object):
             # Get next diff or None if we're at the end
             d = next(differ, (None,))
             if d[0] != dtype:
-                if buffer:
-                    content = "".join(buffer)
-                    if dtype == " ":
-                        yield content
-                    else:
-                        # Show tabs and newlines as literal \t or \n
-                        yield fmt(content.replace("\t", "\\t").replace("\n", "\\n\n"), dtype)
+                yield fmt("".join(buffer), dtype)
                 dtype = d[0]
                 buffer = []
 
             if dtype is None:
                 break
-            buffer.append(d[2:])
+
+            # Show insertions/deletions of whitespace clearly
+            ch = d[2] if dtype == " " else d[2].replace("\n", "\\n\n").replace("\t", "\\t")
+            buffer.append(ch)
+
 
 
 class StyleMeta(ABCMeta):
