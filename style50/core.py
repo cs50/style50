@@ -239,7 +239,6 @@ class Style50(object):
             buffer.append(ch)
 
 
-
 class StyleMeta(ABCMeta):
     """
     Metaclass which defines an abstract class and adds each extension that the
