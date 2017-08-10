@@ -177,6 +177,9 @@ class Style50(object):
         except KeyError:
             raise Error("unknown file type \"{}\", skipping...".format(file))
         else:
+            # Ensure file ends in a trailing newline for consistency
+            if code[-1] != "\n":
+                code += "\n"
             return check(code)
 
     @staticmethod
@@ -192,12 +195,6 @@ class Style50(object):
         Returns a generator yielding a unified diff between `old` and `new`.
         """
         # Add \n to end of file if it doesn't already have it
-        if old[-1] != "\n":
-            old += "\n"
-
-        if new[-1] != "\n":
-            new += "\n"
-
         for diff in difflib.ndiff(old.splitlines(True), new.splitlines(True)):
             if diff[0] == " ":
                 yield diff
@@ -222,13 +219,6 @@ class Style50(object):
         """
         def fmt_color(content, dtype):
             return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
-
-        # Add \n to end of file if it doesn't already have it
-        if old[-1] != "\n":
-            old += "\n"
-
-        if new[-1] != "\n":
-            new += "\n"
 
         return self._char_diff(old, new, fmt_color)
 
@@ -288,6 +278,7 @@ class StyleCheck(object):
 
     def __init__(self, code):
         self.original = code
+
         comments = self.count_comments(code)
 
         try:
