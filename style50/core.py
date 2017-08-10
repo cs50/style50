@@ -167,20 +167,27 @@ class Style50(object):
         _, extension = os.path.splitext(file)
         try:
             check = self.extension_map[extension[1:]]
+
             with open(file) as f:
                 code = f.read()
+
         except (OSError, IOError) as e:
             if e.errno == errno.ENOENT:
                 raise Error("file \"{}\" not found".format(file))
             else:
                 raise
-        except KeyError:
+        except (KeyError, IndexError):
             raise Error("unknown file type \"{}\", skipping...".format(file))
-        else:
-            # Ensure file ends in a trailing newline for consistency
+
+        # Ensure file ends in a trailing newline for consistency
+        try:
             if code[-1] != "\n":
                 code += "\n"
+        except IndexError:
+            raise Error("file is empty")
+        else:
             return check(code)
+
 
     @staticmethod
     def split_diff(old, new):
@@ -194,7 +201,6 @@ class Style50(object):
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
-        # Add \n to end of file if it doesn't already have it
         for diff in difflib.ndiff(old.splitlines(True), new.splitlines(True)):
             if diff[0] == " ":
                 yield diff
