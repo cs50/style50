@@ -110,6 +110,7 @@ class Style50(object):
             # Display results.
             if results.diffs:
                 print(*self.diff(results.original, results.styled), sep="",  end="")
+                print()
             else:
                 termcolor.cprint("no style errors found", "green")
 
