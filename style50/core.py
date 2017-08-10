@@ -86,9 +86,16 @@ class Style50(object):
         """
         files = tuple(self.files)
         # Same header as more
-        header = termcolor.colored("{0}\n{{}}\n{0}\n".format(
-            ":" * 14), "cyan") if len(files) > 1 else ""
+        header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
+            ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
+
+        first = True
         for file in files:
+            if first:
+                first = False
+            else:
+                print(footer, end="")
+
             print(header.format(file), end="")
             try:
                 results = self._check(file)
