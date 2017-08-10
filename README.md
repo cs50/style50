@@ -24,15 +24,16 @@ optional arguments:
 
 `style50` takes zero or more files/directories to style check. If no arguments are given, `style50` will recursively check the current directory. 
 
-`MODE` can be one of `side_by_side` (default), `unified`, `raw`, and `json`. `side_by_side` and `unified` output side-by-side and unified diffs between the inputted file and the correctly styled version respectively. `raw` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
+`MODE` can be one of `character` (default), `split`, `unified`, `score`, and `json`. `character`, `split`, and `unified` output character-based, side-by-side, and unified diffs between the inputted file and the correctly styled version respectively. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
 
 ## Language Support
 `style50` currently supports the following languages:
-    * C
-    * C++
-    * Python
-    * Javascript
-    * Java
+
+- C++
+- C
+- Python
+- Javascript
+- Java
 
 ### Adding a new language
 
@@ -42,6 +43,7 @@ Adding a new language is very simple. Language checks are encoded as classes whi
 import re
 
 from style50 import StyleCheck, Style50
+
 
 class FooBar(StyleCheck):
     

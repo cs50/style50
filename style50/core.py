@@ -9,11 +9,11 @@ import fcntl
 import itertools
 import json
 import os
+import re
 import struct
 import subprocess
-from termios import TIOCGWINSZ
 import sys
-import tempfile
+from termios import TIOCGWINSZ
 
 import icdiff
 import six
@@ -25,7 +25,7 @@ def get_terminal_size(fallback=(80, 24)):
     Return tuple containing columns and rows of controlling terminal, trying harder
     than shutil.get_terminal_size to find a tty before returning fallback.
 
-    Theoretically, stdout, stderr, and stdin could all be different ttys which could
+    Theoretically, stdout, stderr, and stdin could all be different ttys that could
     cause us to get the wrong measurements (instead of using the fallback) but the much more
     common case is that IO is piped.
     """
@@ -52,9 +52,11 @@ class Style50(object):
     """
     Class which checks a list of files/directories for style.
     """
+
+    # Dict which maps file extensions to check classes
     extension_map = {}
 
-    def __init__(self, paths, output="side-by-side"):
+    def __init__(self, paths, output="character"):
         # Creates a generator of all the files found recursively in `paths`.
         self.files = itertools.chain.from_iterable(
             [path] if not os.path.isdir(path)
@@ -64,26 +66,40 @@ class Style50(object):
             for path in paths)
 
         # Set run function as apropriate for output mode.
-        if output == "side-by-side":
-            self.run = self.run_diff
-            self.diff = self.side_by_side
-        elif output == "unified":
-            self.run = self.run_diff
-            self.diff = self.unified
-        elif output == "raw":
-            self.run = self.run_raw
+        if output == "score":
+            self.run = self.run_score
         elif output == "json":
             self.run = self.run_json
         else:
-            raise Error("invalid output type")
+            self.run = self.run_diff
+            # Set diff function as needed
+            if output == "character":
+                self.diff = self.char_diff
+            elif output == "split":
+                self.diff = self.split_diff
+            elif output == "unified":
+                self.diff = self.unified
+            else:
+                raise Error("invalid output type")
 
     def run_diff(self):
         """
         Run checks on self.files, printing diff of styled/unstyled output to stdout.
         """
-        sep = "-" * COLUMNS
-        for file in self.files:
-            termcolor.cprint("{0}\n{1}\n{0}".format(sep, file), "cyan")
+        files = tuple(self.files)
+        # Use same header as more.
+        header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
+            ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
+
+        first = True
+        for file in files:
+            # Only print footer after first file has been printed
+            if first:
+                first = False
+            else:
+                print(footer, end="")
+
+            print(header.format(file), end="")
 
             try:
                 results = self._check(file)
@@ -91,8 +107,9 @@ class Style50(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
+            # Display results.
             if results.diffs:
-                print(*self.diff(results.original, results.styled), sep="\n")
+                print(*self.diff(results.original, results.styled), sep="",  end="")
             else:
                 termcolor.cprint("no style errors found", "green")
 
@@ -103,7 +120,7 @@ class Style50(object):
     def run_json(self):
         """
         Run checks on self.files, printing json object
-        containing information relavent to the IDE plugin at the end.
+        containing information relavent to the CS50 IDE plugin at the end.
         """
         checks = {}
         for file in self.files:
@@ -115,12 +132,12 @@ class Style50(object):
 
             checks[file] = {
                 "comments": results.comment_ratio >= results.COMMENT_MIN,
-                "diff": "<pre>{}</pre>".format("".join(self._html_diff(results.original, results.styled))),
+                "diff": "<pre>{}</pre>".format("".join(self.html_diff(results.original, results.styled))),
             }
 
         json.dump(checks, sys.stdout)
 
-    def run_raw(self):
+    def run_score(self):
         """
         Run checks on self.files, printing raw percentage to stdout.
         """
@@ -163,18 +180,18 @@ class Style50(object):
             return check(code)
 
     @staticmethod
-    def side_by_side(old, new):
+    def split_diff(old, new):
         """
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
-        return icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines())
+        return (line + "\n" for line in icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
 
     @staticmethod
     def unified(old, new):
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
-        for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
+        for diff in difflib.ndiff(old.splitlines(True), new.splitlines(True)):
             if diff[0] == " ":
                 yield diff
             elif diff[0] == "?":
@@ -182,11 +199,29 @@ class Style50(object):
             else:
                 yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
 
-    @staticmethod
-    def _html_diff(old, new):
+    def html_diff(self, old, new):
         """
-        Returns a generator over an HTML-formatted char-based diff.
-        Not line based so not a suitable replacement for seld.diff
+        Return HTML formatted character-based diff between old and new (used for CS50 IDE).
+        """
+        def fmt_html(content, dtype):
+            content = cgi.escape(content, quote=True)
+            return content if dtype == " " else "<{1}><{0}></{1}>".format(content, "ins" if dtype == "+" else "del")
+
+        return self._char_diff(old, new, fmt_html)
+
+    def char_diff(self, old, new):
+        """
+        Return color-coded character-based diff between `old` and `new`.
+        """
+        def fmt_color(content, dtype):
+            return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
+        return self._char_diff(old, new, fmt_color)
+
+    @staticmethod
+    def _char_diff(old, new, fmt):
+        """
+        Returns a char-based diff between `old` and `new` where blocks are
+        formatted by `fmt`.
         """
         differ = difflib.ndiff(old, new)
         # Type of difference.
@@ -197,20 +232,16 @@ class Style50(object):
             # Get next diff or None if we're at the end
             d = next(differ, (None,))
             if d[0] != dtype:
-                if buffer:
-                    # Escape HTML.
-                    content = cgi.escape("".join(buffer), quote=True)
-                    if dtype == " ":
-                        yield content
-                    else:
-                        yield "<{0}>{1}</{0}>".format("ins" if dtype == "+"
-                                                      else "del", content)
+                yield fmt("".join(buffer), dtype)
                 dtype = d[0]
-                buffer.clear()
+                buffer = []
 
             if dtype is None:
                 break
-            buffer.append(d[2:])
+
+            # Show insertions/deletions of whitespace clearly
+            ch = d[2] if dtype == " " else d[2].replace("\n", "\\n\n").replace("\t", "\\t")
+            buffer.append(ch)
 
 
 class StyleMeta(ABCMeta):
@@ -252,9 +283,9 @@ class StyleCheck(object):
 
         self.styled = self.style(code)
 
-        # Count number of differences between styled and unstyled code.
-        self.diffs = sum(d[0] == "+"
-                         for d in difflib.ndiff(code.splitlines(), self.styled.splitlines()))
+        # Count number of differences between styled and unstyled code (average of added and removed lines).
+        self.diffs = sum(d[0] == "+" or d[0] == "-"
+                         for d in difflib.ndiff(code.splitlines(True), self.styled.splitlines(True))) / 2
 
         self.lines = self.count_lines(self.styled)
         self.score = 1 - self.diffs / self.lines
@@ -263,7 +294,7 @@ class StyleCheck(object):
         """
         Count lines of code (by default ignores empty lines, but child could override to do more).
         """
-        return sum(1 for line in code.splitlines() if line.strip())
+        return sum(bool(line.strip()) for line in code.splitlines())
 
     @staticmethod
     def run(command, input=None, exit=0, shell=False):

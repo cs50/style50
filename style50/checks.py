@@ -51,6 +51,13 @@ class Python(StyleCheck):
             prev_type = t_type
         return comments
 
+    def count_lines(self, code):
+        """
+        count_lines ignores blank lines by default,
+        but blank lines are relavent to style per pep8
+        """
+        return len(code.splitlines())
+
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
         return autopep8.fix_code(code, options={"max_line_length": 100})
