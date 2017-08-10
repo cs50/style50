@@ -50,7 +50,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="*", help="files/directories to lint", default=["."])
     parser.add_argument("-o", "--output", action="store", default="character",
-                        choices=["character", "side-by-side", "unified", "raw", "json"], metavar="MODE",
+                        choices=["character", "split", "unified", "score", "json"], metavar="MODE",
                         help="specify output mode")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")

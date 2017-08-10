@@ -24,16 +24,16 @@ optional arguments:
 
 `style50` takes zero or more files/directories to style check. If no arguments are given, `style50` will recursively check the current directory. 
 
-`MODE` can be one of `character` (default), `side_by_side`, `unified`, `raw`, and `json`. `character`, `side_by_side`, and `unified` output character-based, side-by-side, and unified diffs between the inputted file and the correctly styled version respectively. `raw` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
+`MODE` can be one of `character` (default), `split`, `unified`, `score`, and `json`. `character`, `side_by_side`, and `split` output character-based, side-by-side, and unified diffs between the inputted file and the correctly styled version respectively. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
 
 ## Language Support
 `style50` currently supports the following languages:
 
-* C
-* C++
-* Python
-* Javascript
-* Java
+- C++
+- C
+- Python
+- Javascript
+- Java
 
 ### Adding a new language
 

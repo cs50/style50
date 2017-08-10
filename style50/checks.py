@@ -52,8 +52,10 @@ class Python(StyleCheck):
         return comments
 
     def count_lines(self, code):
-        # count_lines removes blank lines by default,
-        # but blank lines are relavent to style per pep8
+        """
+        count_lines ignores blank lines by default,
+        but blank lines are relavent to style per pep8
+        """
         return len(code.splitlines())
 
     # TODO: Determine which options (if any) should be passed to autopep8

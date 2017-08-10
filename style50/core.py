@@ -25,7 +25,7 @@ def get_terminal_size(fallback=(80, 24)):
     Return tuple containing columns and rows of controlling terminal, trying harder
     than shutil.get_terminal_size to find a tty before returning fallback.
 
-    Theoretically, stdout, stderr, and stdin could all be different ttys which could
+    Theoretically, stdout, stderr, and stdin could all be different ttys that could
     cause us to get the wrong measurements (instead of using the fallback) but the much more
     common case is that IO is piped.
     """
@@ -52,6 +52,8 @@ class Style50(object):
     """
     Class which checks a list of files/directories for style.
     """
+
+    # Dict which maps file extensions to check classes
     extension_map = {}
 
     def __init__(self, paths, output="character"):
@@ -64,8 +66,8 @@ class Style50(object):
             for path in paths)
 
         # Set run function as apropriate for output mode.
-        if output == "raw":
-            self.run = self.run_raw
+        if output == "score":
+            self.run = self.run_score
         elif output == "json":
             self.run = self.run_json
         else:
@@ -73,8 +75,8 @@ class Style50(object):
             # Set diff function as needed
             if output == "character":
                 self.diff = self.char_diff
-            elif output == "side-by-side":
-                self.diff = self.side_by_side
+            elif output == "split":
+                self.diff = self.split_diff
             elif output == "unified":
                 self.diff = self.unified
             else:
@@ -85,24 +87,27 @@ class Style50(object):
         Run checks on self.files, printing diff of styled/unstyled output to stdout.
         """
         files = tuple(self.files)
-        # Same header as more
+        # Use same header as more.
         header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
             ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
 
         first = True
         for file in files:
+            # Only print footer after first file has been printed
             if first:
                 first = False
             else:
                 print(footer, end="")
 
             print(header.format(file), end="")
+
             try:
                 results = self._check(file)
             except Error as e:
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
+            # Display results.
             if results.diffs:
                 print(*self.diff(results.original, results.styled), sep="",  end="")
             else:
@@ -115,7 +120,7 @@ class Style50(object):
     def run_json(self):
         """
         Run checks on self.files, printing json object
-        containing information relavent to the IDE plugin at the end.
+        containing information relavent to the CS50 IDE plugin at the end.
         """
         checks = {}
         for file in self.files:
@@ -132,7 +137,7 @@ class Style50(object):
 
         json.dump(checks, sys.stdout)
 
-    def run_raw(self):
+    def run_score(self):
         """
         Run checks on self.files, printing raw percentage to stdout.
         """
@@ -175,7 +180,7 @@ class Style50(object):
             return check(code)
 
     @staticmethod
-    def side_by_side(old, new):
+    def split_diff(old, new):
         """
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
@@ -196,7 +201,7 @@ class Style50(object):
 
     def html_diff(self, old, new):
         """
-        Return HTML formatted character-based diff between old and new (used for IDE).
+        Return HTML formatted character-based diff between old and new (used for CS50 IDE).
         """
         def fmt_html(content, dtype):
             content = cgi.escape(content, quote=True)
