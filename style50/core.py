@@ -11,9 +11,9 @@ import json
 import os
 import re
 import struct
-from termios import TIOCGWINSZ
 import subprocess
 import sys
+from termios import TIOCGWINSZ
 
 import icdiff
 import six
