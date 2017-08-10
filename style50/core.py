@@ -110,7 +110,6 @@ class Style50(object):
             # Display results.
             if results.diffs:
                 print(*self.diff(results.original, results.styled), sep="",  end="")
-                print()
             else:
                 termcolor.cprint("no style errors found", "green")
 
@@ -192,6 +191,13 @@ class Style50(object):
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
+        # Add \n to end of file if it doesn't already have it
+        if old[-1] != "\n":
+            old += "\n"
+
+        if new[-1] != "\n":
+            new += "\n"
+
         for diff in difflib.ndiff(old.splitlines(True), new.splitlines(True)):
             if diff[0] == " ":
                 yield diff
@@ -216,6 +222,14 @@ class Style50(object):
         """
         def fmt_color(content, dtype):
             return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
+
+        # Add \n to end of file if it doesn't already have it
+        if old[-1] != "\n":
+            old += "\n"
+
+        if new[-1] != "\n":
+            new += "\n"
+
         return self._char_diff(old, new, fmt_color)
 
     @staticmethod
