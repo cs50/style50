@@ -6,7 +6,7 @@ from tokenize import generate_tokens, STRING, INDENT, COMMENT
 import autopep8
 import jsbeautifier
 
-from . import StyleCheck
+from . import StyleCheck, Error
 
 
 class C(StyleCheck):
@@ -26,6 +26,20 @@ class C(StyleCheck):
 
     # Matches string literals.
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
+
+    def __init__(self, code):
+
+        version_text = self.run(["astyle", "--version"])
+        try:
+            version = re.match("Artistic Style Version (\d.+)", version_text).groups()[0]
+        except IndexError:
+            raise Error("could not determine astyle version")
+
+        if tuple(map(int, version.split("."))) < (3, 0, 1):
+            raise Error("style50 requires astyle version 3.0.1 or greater, "
+                        "but version {} was found".format(version))
+
+        StyleCheck.__init__(self, code)
 
     def count_comments(self, code):
         # Remove all string literals.
@@ -73,6 +87,9 @@ class Js(C):
          (\".*?(?<=[^\\])\")             |       # double-quoted strings
          ((?<![\*\/])\/(?![\/\*]).*?(?<![\\])\/) # JS regexes, trying hard not to be tripped up by comments
          """, re.VERBOSE)
+
+    # C.__init__ checks for astyle but we don't need this for Js
+    __init__ = StyleCheck.__init__
 
     # TODO: Determine which options, if any should be passed here
     def style(self, code):
