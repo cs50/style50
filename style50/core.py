@@ -107,15 +107,16 @@ class Style50(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
-            # Display results.
+            # Display results
             if results.diffs:
                 print(*self.diff(results.original, results.styled), sep="",  end="")
+                if results.comment_ratio < results.COMMENT_MIN:
+                    termcolor.cprint("And consider adding more comments!", "yellow")
             else:
-                termcolor.cprint("no style errors found", "green")
+                termcolor.cprint("Looks good!", "green")
+                if results.comment_ratio < results.COMMENT_MIN:
+                    termcolor.cprint("But consider adding more comments!", "yellow")
 
-            if results.comment_ratio < results.COMMENT_MIN:
-                termcolor.cprint("Warning: It looks like you don't have very many comments; "
-                                 "this may bring down your final score.", "yellow")
 
     def run_json(self):
         """
