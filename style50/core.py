@@ -195,7 +195,7 @@ class Style50(object):
         """
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
-        return (line + "\n" for line in icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
+        return (line.rstrip() + "\n" for line in icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
 
     @staticmethod
     def unified(old, new):
