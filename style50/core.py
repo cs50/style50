@@ -167,17 +167,27 @@ class Style50(object):
         _, extension = os.path.splitext(file)
         try:
             check = self.extension_map[extension[1:]]
+
             with open(file) as f:
                 code = f.read()
+
         except (OSError, IOError) as e:
             if e.errno == errno.ENOENT:
                 raise Error("file \"{}\" not found".format(file))
             else:
                 raise
-        except KeyError:
+        except (KeyError, IndexError):
             raise Error("unknown file type \"{}\", skipping...".format(file))
+
+        # Ensure file ends in a trailing newline for consistency
+        try:
+            if code[-1] != "\n":
+                code += "\n"
+        except IndexError:
+            raise Error("file is empty")
         else:
             return check(code)
+
 
     @staticmethod
     def split_diff(old, new):
@@ -205,7 +215,7 @@ class Style50(object):
         """
         def fmt_html(content, dtype):
             content = cgi.escape(content, quote=True)
-            return content if dtype == " " else "<{1}><{0}></{1}>".format(content, "ins" if dtype == "+" else "del")
+            return content if dtype == " " else "<{1}>{0}</{1}>".format(content, "ins" if dtype == "+" else "del")
 
         return self._char_diff(old, new, fmt_html)
 
@@ -215,6 +225,7 @@ class Style50(object):
         """
         def fmt_color(content, dtype):
             return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
+
         return self._char_diff(old, new, fmt_color)
 
     @staticmethod
@@ -273,6 +284,7 @@ class StyleCheck(object):
 
     def __init__(self, code):
         self.original = code
+
         comments = self.count_comments(code)
 
         try:
