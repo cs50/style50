@@ -48,7 +48,7 @@ def main():
 
     # Define command-line arguments.
     parser = argparse.ArgumentParser(prog="style50")
-    parser.add_argument("files", nargs="*", help="files/directories to lint", default=["."])
+    parser.add_argument("files", nargs="+", help="files/directories to lint")
     parser.add_argument("-o", "--output", action="store", default="character",
                         choices=["character", "split", "unified", "score", "json"], metavar="MODE",
                         help="specify output mode. Valid modes are character (default), split, unified, score, and json")
