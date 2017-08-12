@@ -178,13 +178,6 @@ class Style50(object):
                 raise
         except KeyError:
             raise Error("unknown file type \"{}\", skipping...".format(file))
-
-        # Ensure file ends in a trailing newline for consistency
-        try:
-            if code[-1] != "\n":
-                code += "\n"
-        except IndexError:
-            raise Error("file is empty")
         else:
             return check(code)
 
