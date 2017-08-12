@@ -37,7 +37,7 @@ optional arguments:
 
 ### Adding a new language
 
-Adding a new language is very simple. Language checks are encoded as classes which inherit from the `StyleCheck` base class (see `style50/checks.py` for more real-world examples). The following is a template for style checks which allows style50 to check the imaginary FooBar language for style.
+Adding a new language is very simple. Language checks are encoded as classes which inherit from the `StyleCheck` base class (see `style50/languages.py` for more real-world examples). The following is a template for style checks which allows style50 to check the imaginary FooBar language for style.
 
 ```python
 import re
