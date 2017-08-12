@@ -234,15 +234,15 @@ class Style50(object):
         is formatted by `fmt` and transitions between blocks are determined by `transition`.
         """
 
-        differ = difflib.ndiff(old.rstrip("\n"), new.rstrip("\n"))
+        differ = difflib.ndiff(old, new)
 
         # Type of difference.
         dtype = None
 
-        # Buffer for current line
+        # Buffer for current line.
         line = []
         while True:
-            # Get next diff or None if we're at the end
+            # Get next diff or None if we're at the end.
             d = next(differ, (None,))
             if d[0] != dtype:
                 line += transition(dtype, d[0])
@@ -253,16 +253,19 @@ class Style50(object):
 
             if d[2] == "\n":
                 if dtype != " ":
-                    # Show added/removed newlines
+                    # Show added/removed newlines.
                     line += [fmt(r"\n"), transition(dtype, " ")]
                 yield "".join(line)
                 line = [transition(" ", dtype)]
             else:
-                # Show added/removed tabs
+                # Show added/removed tabs.
                 line.append(fmt(d[2] if dtype == " " else d[2].replace("\t", r"\t")))
 
-        # Flush buffer before quitting
-        yield "".join(line)
+        # Flush buffer before quitting.
+        last = "".join(line)
+        # Only print last line if it contains non-ANSI characters.
+        if re.sub(r"\x1b[^m]*m", "", last):
+            yield last
 
 
 class StyleMeta(ABCMeta):

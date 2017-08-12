@@ -8,7 +8,7 @@ import traceback
 
 import termcolor
 
-from . import Style50, Error
+from . import Style50, Error, __version__
 
 # require python 2.7+.
 if sys.version_info < (2, 7):
@@ -54,6 +54,7 @@ def main():
                         help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
+    parser.add_argument("--version", action="version", version="%(prog)s {}".format(__version__))
 
     main.args = parser.parse_args()
     Style50(main.args.file, output=main.args.output).run()
