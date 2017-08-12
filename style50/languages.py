@@ -31,6 +31,7 @@ class C(StyleCheck):
 
         version_text = self.run(["astyle", "--version"])
         try:
+            # Match astyle version via regex.
             version = re.match("Artistic Style Version (\d.+)", version_text).groups()[0]
         except IndexError:
             raise Error("could not determine astyle version")
@@ -39,6 +40,7 @@ class C(StyleCheck):
             raise Error("style50 requires astyle version 3.0.1 or greater, "
                         "but version {} was found".format(version))
 
+        # Call parent init.
         StyleCheck.__init__(self, code)
 
     def count_comments(self, code):

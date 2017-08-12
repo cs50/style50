@@ -117,7 +117,6 @@ class Style50(object):
                 if results.comment_ratio < results.COMMENT_MIN:
                     termcolor.cprint("But consider adding more comments!", "yellow")
 
-
     def run_json(self):
         """
         Run checks on self.files, printing json object
@@ -189,7 +188,6 @@ class Style50(object):
         else:
             return check(code)
 
-
     @staticmethod
     def split_diff(old, new):
         """
@@ -229,7 +227,8 @@ class Style50(object):
         Return color-coded character-based diff between `old` and `new`.
         """
         def color_transition(old_type, new_type):
-            new_color = termcolor.colored("", None, "on_red" if new_type == "-" else "on_green" if new_type == "+" else None)
+            new_color = termcolor.colored("", None, "on_red" if new_type ==
+                                          "-" else "on_green" if new_type == "+" else None)
             return "{}{}".format(termcolor.RESET, new_color[:-len(termcolor.RESET)])
 
         return self._char_diff(old, new, color_transition)
