@@ -1,6 +1,6 @@
-__all__ = ["Style50", "checks", "StyleCheck", "Error"]
+__all__ = ["Style50", "languages", "StyleCheck", "Error"]
 
-from .core import Style50, StyleCheck, Error
+from .style50 import Style50, StyleCheck, Error
 
-# Ensure that checks are registered
-from . import checks
+# Ensure that all language checks are registered
+from . import languages

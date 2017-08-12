@@ -107,15 +107,15 @@ class Style50(object):
                 termcolor.cprint(e.msg, "yellow", file=sys.stderr)
                 continue
 
-            # Display results.
+            # Display results
             if results.diffs:
-                print(*self.diff(results.original, results.styled), sep="",  end="")
+                print(*self.diff(results.original, results.styled), sep="\n")
+                if results.comment_ratio < results.COMMENT_MIN:
+                    termcolor.cprint("And consider adding more comments!", "yellow")
             else:
-                termcolor.cprint("no style errors found", "green")
-
-            if results.comment_ratio < results.COMMENT_MIN:
-                termcolor.cprint("Warning: It looks like you don't have very many comments; "
-                                 "this may bring down your final score.", "yellow")
+                termcolor.cprint("Looks good!", "green")
+                if results.comment_ratio < results.COMMENT_MIN:
+                    termcolor.cprint("But consider adding more comments!", "yellow")
 
     def run_json(self):
         """
@@ -132,7 +132,7 @@ class Style50(object):
 
             checks[file] = {
                 "comments": results.comment_ratio >= results.COMMENT_MIN,
-                "diff": "<pre>{}</pre>".format("".join(self.html_diff(results.original, results.styled))),
+                "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
             }
 
         json.dump(checks, sys.stdout)
@@ -176,32 +176,25 @@ class Style50(object):
                 raise Error("file \"{}\" not found".format(file))
             else:
                 raise
-        except (KeyError, IndexError):
+        except KeyError:
             raise Error("unknown file type \"{}\", skipping...".format(file))
-
-        # Ensure file ends in a trailing newline for consistency
-        try:
-            if code[-1] != "\n":
-                code += "\n"
-        except IndexError:
-            raise Error("file is empty")
         else:
             return check(code)
-
 
     @staticmethod
     def split_diff(old, new):
         """
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
-        return (line + "\n" for line in icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
+        return map(lambda l: l.rstrip(),
+                   icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
 
     @staticmethod
     def unified(old, new):
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
-        for diff in difflib.ndiff(old.splitlines(True), new.splitlines(True)):
+        for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
             if diff[0] == " ":
                 yield diff
             elif diff[0] == "?":
@@ -213,46 +206,63 @@ class Style50(object):
         """
         Return HTML formatted character-based diff between old and new (used for CS50 IDE).
         """
-        def fmt_html(content, dtype):
-            content = cgi.escape(content, quote=True)
-            return content if dtype == " " else "<{1}>{0}</{1}>".format(content, "ins" if dtype == "+" else "del")
+        def html_transition(old_type, new_type):
+            tags = []
+            for tag in [("/", old_type), ("", new_type)]:
+                if tag[1] not in ["+", "-"]:
+                    continue
+                tags.append("<{}{}>".format(tag[0], "ins" if tag[1] == "+" else "del"))
+            return "".join(tags)
 
-        return self._char_diff(old, new, fmt_html)
+        return self._char_diff(old, new, html_transition, fmt=cgi.escape)
 
     def char_diff(self, old, new):
         """
         Return color-coded character-based diff between `old` and `new`.
         """
-        def fmt_color(content, dtype):
-            return termcolor.colored(content, None, "on_green" if dtype == "+" else "on_red" if dtype == "-" else None)
+        def color_transition(old_type, new_type):
+            new_color = termcolor.colored("", None, "on_red" if new_type ==
+                                          "-" else "on_green" if new_type == "+" else None)
+            return "{}{}".format(termcolor.RESET, new_color[:-len(termcolor.RESET)])
 
-        return self._char_diff(old, new, fmt_color)
+        return self._char_diff(old, new, color_transition)
 
     @staticmethod
-    def _char_diff(old, new, fmt):
+    def _char_diff(old, new, transition, fmt=lambda c: c):
         """
-        Returns a char-based diff between `old` and `new` where blocks are
-        formatted by `fmt`.
+        Returns a char-based diff between `old` and `new` where each character
+        is formatted by `fmt` and transitions between blocks are determined by `transition`.
         """
-        differ = difflib.ndiff(old, new)
+
+        differ = difflib.ndiff(old.rstrip("\n"), new.rstrip("\n"))
+
         # Type of difference.
         dtype = None
-        # List diffs of same type.
-        buffer = []
+
+        # Buffer for current line
+        line = []
         while True:
             # Get next diff or None if we're at the end
             d = next(differ, (None,))
             if d[0] != dtype:
-                yield fmt("".join(buffer), dtype)
+                line += transition(dtype, d[0])
                 dtype = d[0]
-                buffer = []
 
             if dtype is None:
                 break
 
-            # Show insertions/deletions of whitespace clearly
-            ch = d[2] if dtype == " " else d[2].replace("\n", "\\n\n").replace("\t", "\\t")
-            buffer.append(ch)
+            if d[2] == "\n":
+                if dtype != " ":
+                    # Show added/removed newlines
+                    line += [fmt(r"\n"), transition(dtype, " ")]
+                yield "".join(line)
+                line = [transition(" ", dtype)]
+            else:
+                # Show added/removed tabs
+                line.append(fmt(d[2] if dtype == " " else d[2].replace("\t", r"\t")))
+
+        # Flush buffer before quitting
+        yield "".join(line)
 
 
 class StyleMeta(ABCMeta):
