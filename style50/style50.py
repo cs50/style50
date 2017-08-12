@@ -176,7 +176,7 @@ class Style50(object):
                 raise Error("file \"{}\" not found".format(file))
             else:
                 raise
-        except (KeyError, IndexError):
+        except KeyError:
             raise Error("unknown file type \"{}\", skipping...".format(file))
 
         # Ensure file ends in a trailing newline for consistency
