@@ -48,16 +48,16 @@ def main():
 
     # Define command-line arguments.
     parser = argparse.ArgumentParser(prog="style50")
-    parser.add_argument("files", nargs="+", help="files/directories to lint")
+    parser.add_argument("file", nargs="+", help="file or directory to lint")
     parser.add_argument("-o", "--output", action="store", default="character",
                         choices=["character", "split", "unified", "score", "json"], metavar="MODE",
-                        help="specify output mode. Valid modes are character (default), split, unified, score, and json")
+                        help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
     parser.add_argument("--version", action="version", version="%(prog)s {}".format(__version__))
 
     main.args = parser.parse_args()
-    Style50(main.args.files, output=main.args.output).run()
+    Style50(main.args.file, output=main.args.output).run()
 
 
 # Necessary so `console_scripts` can extract the main function
