@@ -54,7 +54,7 @@ def main():
                         help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
-    parser.add_argument("--version", action="version", version="%(prog)s {}".format(__version__))
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     main.args = parser.parse_args()
     Style50(main.args.file, output=main.args.output).run()
