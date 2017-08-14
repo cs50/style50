@@ -5,26 +5,26 @@ This is style50, a tool with which code can be checked against the CS50 style gu
 
     pip install style50
 
-In order to style check C, C++, or Java code, a recent version (`>=3.0`) of `astyle` must be installed. `astlye` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astlye` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
 
 ## Usage
 
 ```
-usage: style50 [-h] [-o MODE] [-v] [files [files ...]]
+usage: style50 [-h] [-o MODE] [-v] [-V] file [file ...]
 
 positional arguments:
-  files                 files/directories to lint
+  file                  file or directory to lint
 
 optional arguments:
   -h, --help            show this help message and exit
   -o MODE, --output MODE
-                        specify output mode
+                        output mode, which can be character (default), split,
+                        unified, score, or json
   -v, --verbose         print full tracebacks of errors
+  -V, --version         show program's version number and exit
 ```
 
-`style50` takes zero or more files/directories to style check. If no arguments are given, `style50` will recursively check the current directory. 
-
-`MODE` can be one of `character` (default), `split`, `unified`, `score`, and `json`. `character`, `split`, and `unified` output character-based, side-by-side, and unified diffs between the inputted file and the correctly styled version respectively. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
+`character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
 
 ## Language Support
 `style50` currently supports the following languages:
