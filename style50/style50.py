@@ -131,6 +131,7 @@ class Style50(object):
                 continue
 
             checks[file] = {
+                "score": results.score,
                 "comments": results.comment_ratio >= results.COMMENT_MIN,
                 "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
             }
