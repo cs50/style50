@@ -127,13 +127,15 @@ class Style50(object):
             try:
                 results = self._check(file)
             except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
-                continue
-
-            checks[file] = {
-                "comments": results.comment_ratio >= results.COMMENT_MIN,
-                "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
-            }
+                checks[file] = {
+                    "error": e.msg
+                }
+            else:
+                checks[file] = {
+                    "score": results.score,
+                    "comments": results.comment_ratio >= results.COMMENT_MIN,
+                    "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
+                }
 
         json.dump(checks, sys.stdout)
 
