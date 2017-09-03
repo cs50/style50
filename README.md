@@ -5,7 +5,10 @@ This is style50, a tool with which code can be checked against the CS50 style gu
 
     pip install style50
 
-In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astlye` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astyle` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+
+### Windows
+Along with most of CS50's command line tools, `style50` supports being run on Windows but only via the [Linux Subsystem in Windows 10](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide). After launching it, `style50` can be installed using the `pip` command above.
 
 ## Usage
 
