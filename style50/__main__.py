@@ -1,11 +1,12 @@
 from __future__ import print_function
 from __future__ import division
 
-import argparse
+import json
 import signal
 import sys
 import traceback
 
+import argparse
 import termcolor
 
 from . import Style50, Error, __version__
@@ -55,6 +56,9 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
     parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-E", "--extensions", action="version",
+                        version=json.dumps(list(Style50.extension_map.keys())),
+                        help="print supported file extensions (as JSON list) and exit")
 
     main.args = parser.parse_args()
     Style50(main.args.file, output=main.args.output).run()
