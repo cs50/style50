@@ -5,15 +5,18 @@ This is style50, a tool with which code can be checked against the CS50 style gu
 
     pip install style50
 
-In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astlye` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astyle` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+
+### Windows
+Along with most of CS50's command line tools, `style50` supports being run on Windows but only via the [Linux Subsystem in Windows 10](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide). After launching it, `style50` can be installed using the `pip` command above.
 
 ## Usage
 
 ```
-usage: style50 [-h] [-o MODE] [-v] [-V] file [file ...]
+usage: style50 [-h] [-o MODE] [-v] [-V] [-E] FILE [FILE ...]
 
 positional arguments:
-  file                  file or directory to lint
+  FILE                  file or directory to lint
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -22,6 +25,8 @@ optional arguments:
                         unified, score, or json
   -v, --verbose         print full tracebacks of errors
   -V, --version         show program's version number and exit
+  -E, --extensions      print supported file extensions (as JSON list) and
+                        exit
 ```
 
 `character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).

@@ -1,11 +1,12 @@
 from __future__ import print_function
 from __future__ import division
 
-import argparse
+import json
 import signal
 import sys
 import traceback
 
+import argparse
 import termcolor
 
 from . import Style50, Error, __version__
@@ -48,13 +49,16 @@ def main():
 
     # Define command-line arguments.
     parser = argparse.ArgumentParser(prog="style50")
-    parser.add_argument("file", nargs="+", help="file or directory to lint")
+    parser.add_argument("FILE", nargs="+", help="file or directory to lint")
     parser.add_argument("-o", "--output", action="store", default="character",
                         choices=["character", "split", "unified", "score", "json"], metavar="MODE",
                         help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
     parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-E", "--extensions", action="version",
+                        version=json.dumps(list(Style50.extension_map.keys())),
+                        help="print supported file extensions (as JSON list) and exit")
 
     main.args = parser.parse_args()
     Style50(main.args.file, output=main.args.output).run()
