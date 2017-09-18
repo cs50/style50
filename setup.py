@@ -10,7 +10,7 @@ setup(
         "Topic :: Utilities"
     ],
     description="This is style50, with which code can be checked against the CS50 style guide",
-    install_requires=["argparse", "autopep8", "icdiff", "jsbeautifier", "six", "termcolor"],
+    install_requires=["argparse", "autopep8", "icdiff", "jsbeautifier==1.6.14", "six", "termcolor"],
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
@@ -20,5 +20,5 @@ setup(
         "console_scripts": ["style50=style50.__main__:main"],
     },
     url="https://github.com/cs50/style50",
-    version="2.1.4"
+    version="2.1.5"
 )
