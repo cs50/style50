@@ -18,7 +18,8 @@ class C(StyleCheck):
         "--pad-header", "--pad-oper", "--max-code-length=100",
         "--convert-tabs", "--indent=spaces=4",
         "--indent-continuation=1", "--indent-switches",
-        "--min-conditional-indent=1", "--style=allman"
+        "--lineend=linux", "--min-conditional-indent=1",
+        "--style=allman"
     ]
 
     # Match (1) /**/ comments, and (2) // comments.
