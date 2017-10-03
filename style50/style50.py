@@ -118,12 +118,12 @@ class Style50(object):
             if results.comment_ratio < results.COMMENT_MIN:
                 termcolor.cprint("{} consider adding more comments!".format(conjunction), "yellow")
 
-            for type, _, c in sorted(self._warn_chars):
+            for type, c in sorted(self._warn_chars):
                 color, verb = ("on_green", "inserted") if type == "+" else ("on_red", "removed")
                 termcolor.cprint("* ", "cyan", end="")
-                termcolor.cprint(repr(c)[1:-1], None, color, end="")
+                termcolor.cprint(c, None, color, end="")
                 termcolor.cprint(" means that a {} character should be {}".format(
-                    "newline" if c == "\n" else "tab", verb), "cyan")
+                    "newline" if c == "\\n" else "tab", verb), "cyan")
 
     def run_json(self):
         """
@@ -260,7 +260,7 @@ class Style50(object):
 
             if d[2] == "\n":
                 if dtype != " ":
-                    self._warn_chars.add(d)
+                    self._warn_chars.add((dtype, "\\n"))
                     # Show added/removed newlines.
                     line += [fmt(r"\n"), transition(dtype, " ")]
                 yield "".join(line)
@@ -268,7 +268,7 @@ class Style50(object):
             elif dtype != " " and d[2] == "\t":
                 # Show added/removed tabs.
                 line.append(fmt("\\t"))
-                self._warn_chars.add(d)
+                self._warn_chars.add((dtype, "\\t"))
             else:
                 line.append(fmt(d[2]))
 
