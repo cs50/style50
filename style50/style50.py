@@ -92,16 +92,8 @@ class Style50(object):
         header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
             ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
 
-        first = True
         for file in files:
-            # Only print footer after first file has been printed
-            if first:
-                first = False
-            else:
-                print(footer, end="")
-
             print(header.format(file), end="")
-
             try:
                 results = self._check(file)
             except Error as e:
@@ -110,20 +102,26 @@ class Style50(object):
 
             # Display results
             if results.diffs:
+                print()
                 print(*self.diff(results.original, results.styled), sep="\n")
+                print()
                 conjunction = "And"
             else:
+                termcolor.cprint("Looks good!", "green")
                 conjunction = "But"
+
+            if results.diffs:
+                for type, c in sorted(self._warn_chars):
+                    color, verb = ("on_green", "insert") if type == "+" else ("on_red", "delete")
+                    termcolor.cprint(c, None, color, end="")
+                    termcolor.cprint(" means that you should {} a {}.".format(
+                        verb, "newline" if c == "\\n" else "tab"), "yellow")
 
             if results.comment_ratio < results.COMMENT_MIN:
                 termcolor.cprint("{} consider adding more comments!".format(conjunction), "yellow")
 
-            for type, c in sorted(self._warn_chars):
-                color, verb = ("on_green", "inserted") if type == "+" else ("on_red", "removed")
-                termcolor.cprint("* ", "cyan", end="")
-                termcolor.cprint(c, None, color, end="")
-                termcolor.cprint(" means that a {} character should be {}".format(
-                    "newline" if c == "\\n" else "tab", verb), "cyan")
+            if (results.comment_ratio < results.COMMENT_MIN or self._warn_chars) and results.diffs:
+                print()
 
     def run_json(self):
         """
