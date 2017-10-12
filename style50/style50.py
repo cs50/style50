@@ -71,6 +71,7 @@ class Style50(object):
         elif output == "json":
             self.run = self.run_json
         else:
+            self._warn_chars = set()
             self.run = self.run_diff
             # Set diff function as needed
             if output == "character":
@@ -91,16 +92,8 @@ class Style50(object):
         header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
             ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
 
-        first = True
         for file in files:
-            # Only print footer after first file has been printed
-            if first:
-                first = False
-            else:
-                print(footer, end="")
-
             print(header.format(file), end="")
-
             try:
                 results = self._check(file)
             except Error as e:
@@ -109,13 +102,26 @@ class Style50(object):
 
             # Display results
             if results.diffs:
+                print()
                 print(*self.diff(results.original, results.styled), sep="\n")
-                if results.comment_ratio < results.COMMENT_MIN:
-                    termcolor.cprint("And consider adding more comments!", "yellow")
+                print()
+                conjunction = "And"
             else:
                 termcolor.cprint("Looks good!", "green")
-                if results.comment_ratio < results.COMMENT_MIN:
-                    termcolor.cprint("But consider adding more comments!", "yellow")
+                conjunction = "But"
+
+            if results.diffs:
+                for type, c in sorted(self._warn_chars):
+                    color, verb = ("on_green", "insert") if type == "+" else ("on_red", "delete")
+                    termcolor.cprint(c, None, color, end="")
+                    termcolor.cprint(" means that you should {} a {}.".format(
+                        verb, "newline" if c == "\\n" else "tab"), "yellow")
+
+            if results.comment_ratio < results.COMMENT_MIN:
+                termcolor.cprint("{} consider adding more comments!".format(conjunction), "yellow")
+
+            if (results.comment_ratio < results.COMMENT_MIN or self._warn_chars) and results.diffs:
+                print()
 
     def run_json(self):
         """
@@ -166,18 +172,16 @@ class Style50(object):
         Run apropriate check based on `file`'s extension and return it,
         otherwise raise an Error
         """
+
+        if not os.path.exists(file):
+            raise Error("file \"{}\" not found".format(file))
+
         _, extension = os.path.splitext(file)
         try:
             check = self.extension_map[extension[1:]]
 
             with open(file) as f:
                 code = f.read()
-
-        except (OSError, IOError) as e:
-            if e.errno == errno.ENOENT:
-                raise Error("file \"{}\" not found".format(file))
-            else:
-                raise
         except KeyError:
             raise Error("unknown file type \"{}\", skipping...".format(file))
         else:
@@ -229,8 +233,7 @@ class Style50(object):
 
         return self._char_diff(old, new, color_transition)
 
-    @staticmethod
-    def _char_diff(old, new, transition, fmt=lambda c: c):
+    def _char_diff(self, old, new, transition, fmt=lambda c: c):
         """
         Returns a char-based diff between `old` and `new` where each character
         is formatted by `fmt` and transitions between blocks are determined by `transition`.
@@ -255,13 +258,17 @@ class Style50(object):
 
             if d[2] == "\n":
                 if dtype != " ":
+                    self._warn_chars.add((dtype, "\\n"))
                     # Show added/removed newlines.
                     line += [fmt(r"\n"), transition(dtype, " ")]
                 yield "".join(line)
                 line = [transition(" ", dtype)]
-            else:
+            elif dtype != " " and d[2] == "\t":
                 # Show added/removed tabs.
-                line.append(fmt(d[2] if dtype == " " else d[2].replace("\t", r"\t")))
+                line.append(fmt("\\t"))
+                self._warn_chars.add((dtype, "\\t"))
+            else:
+                line.append(fmt(d[2]))
 
         # Flush buffer before quitting.
         last = "".join(line)
