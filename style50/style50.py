@@ -17,6 +17,7 @@ from termios import TIOCGWINSZ
 
 import icdiff
 import six
+import magic
 import termcolor
 
 
@@ -53,8 +54,10 @@ class Style50(object):
     Class which checks a list of files/directories for style.
     """
 
-    # Dict which maps file extensions to check classes
+    # Dict that maps file extensions to check classes
     extension_map = {}
+    # Dict that maps substrings of libmagic's outputs to classes. Used as fallback when file extension unrecognized
+    magic_map = {}
 
     def __init__(self, paths, output="character"):
         # Creates a generator of all the files found recursively in `paths`.
@@ -179,13 +182,17 @@ class Style50(object):
         _, extension = os.path.splitext(file)
         try:
             check = self.extension_map[extension[1:]]
-
-            with open(file) as f:
-                code = f.read()
         except KeyError:
-            raise Error("unknown file type \"{}\", skipping...".format(file))
-        else:
-            return check(code)
+            magic_type = magic.from_file(file)
+            for names, cls in self.magic_map.items():
+                if any(name in magic_type for name in names):
+                    check = cls
+                    break
+            else:
+                raise Error("unknown file type \"{}\", skipping...".format(file))
+
+        with open(file) as f:
+            return check(f.read())
 
     @staticmethod
     def split_diff(old, new):
@@ -288,6 +295,8 @@ class StyleMeta(ABCMeta):
             # Register class as the check for each of its extensions.
             for ext in attrs.get("extensions", []):
                 Style50.extension_map[ext] = cls
+                for name in cls.magic_names:
+                    Style50.magic_map[name] = cls
         except TypeError:
             # If `extensions` property isn't iterable, skip it.
             pass
@@ -303,6 +312,9 @@ class StyleCheck(object):
 
     # Warn if fewer than 10% of code is comments.
     COMMENT_MIN = 0.10
+
+    # Contains substrings to be matched against libmagic's output if file extension not recognized
+    magic_names = []
 
     def __init__(self, code):
         self.original = code
