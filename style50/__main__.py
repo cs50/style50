@@ -55,7 +55,7 @@ def main():
                         help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version="%(prog)s {}".format(__version__))
     parser.add_argument("-E", "--extensions", action="version",
                         version=json.dumps(list(Style50.extension_map.keys())),
                         help="print supported file extensions (as JSON list) and exit")
