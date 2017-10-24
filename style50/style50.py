@@ -16,8 +16,8 @@ import sys
 from termios import TIOCGWINSZ
 
 import icdiff
-import six
 import magic
+import six
 import termcolor
 
 
@@ -310,7 +310,7 @@ class StyleCheck(object):
     implement `style`.
     """
 
-    # Warn if fewer than 10% of code is comments.
+    # Warn if less than 10% of code is comments.
     COMMENT_MIN = 0.10
 
     # Contains substrings to be matched against libmagic's output if file extension not recognized
