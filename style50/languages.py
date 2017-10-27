@@ -11,6 +11,7 @@ from . import StyleCheck, Error
 
 class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
+    magic_names = ["C source"]
 
     astyle = [
         "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
@@ -54,6 +55,7 @@ class C(StyleCheck):
 
 
 class Python(StyleCheck):
+    magic_names = ["Python script"]
     extensions = ["py"]
 
     def count_comments(self, code):
@@ -101,4 +103,5 @@ class Js(C):
 
 class Java(C):
     extensions = ["java"]
+    magic_names = ["Java source"]
     astyle = C.astyle + ["--mode=java", "--style=java"]
