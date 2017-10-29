@@ -198,7 +198,7 @@ class Style50(object):
                 code = f.read()
 
             # Ensure we don't warn about adding trailing newline
-            if code[-1] != '\n':
+            if code and code[-1] != '\n':
                 code += '\n'
 
             return check(code)
