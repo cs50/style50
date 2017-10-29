@@ -195,7 +195,13 @@ class Style50(object):
 
         try:
             with open(file) as f:
-                return check(f.read())
+                code = f.read()
+
+            # Ensure we don't warn about adding trailing newline
+            if code[-1] != '\n':
+                code += '\n'
+
+            return check(code)
         except UnicodeDecodeError:
             raise Error("file does not seem to contain text, skipping...")
 
