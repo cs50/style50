@@ -186,8 +186,6 @@ class Style50(object):
             magic_type = magic.from_file(file)
             for name, cls in self.magic_map.items():
                 if name in magic_type:
-                    print(magic_type)
-                    print(name)
                     check = cls
                     break
             else:
