@@ -195,9 +195,18 @@ class Style50(object):
 
         try:
             with open(file) as f:
-                return check(f.read())
+                code = f.read()
         except UnicodeDecodeError:
             raise Error("file does not seem to contain text, skipping...")
+
+        # Ensure we don't warn about adding trailing newline
+        try:
+            if code[-1] != '\n':
+                code += '\n'
+        except IndexError:
+            pass
+
+        return check(code)
 
     @staticmethod
     def split_diff(old, new):
@@ -339,7 +348,10 @@ class StyleCheck(object):
                          for d in difflib.ndiff(code.splitlines(True), self.styled.splitlines(True))) / 2
 
         self.lines = self.count_lines(self.styled)
-        self.score = 1 - self.diffs / self.lines
+        try:
+            self.score = 1 - self.diffs / self.lines
+        except ZeroDivisionError:
+            raise Error("file is empty")
 
     def count_lines(self, code):
         """
