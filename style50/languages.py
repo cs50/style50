@@ -1,7 +1,7 @@
 import io
 import re
 import sys
-from tokenize import generate_tokens, STRING, INDENT, COMMENT
+from tokenize import generate_tokens, STRING, INDENT, COMMENT, TokenError
 
 import autopep8
 import jsbeautifier
@@ -30,7 +30,6 @@ class C(StyleCheck):
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
 
     def __init__(self, code):
-
         version_text = self.run(["astyle", "--version"])
         try:
             # Match astyle version via regex.
@@ -64,10 +63,13 @@ class Python(StyleCheck):
         comments = 0
 
         code_lines = iter(code.splitlines(True))
-        for t_type, _, _, _, _ in generate_tokens(lambda: next(code_lines)):
-            # Increment if token is comment or docstring
-            comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
-            prev_type = t_type
+        try:
+            for t_type, _, _, _, _ in generate_tokens(lambda: next(code_lines)):
+                # Increment if token is comment or docstring
+                comments += t_type == COMMENT or (t_type == STRING and prev_type == INDENT)
+                prev_type = t_type
+        except TokenError:
+            raise Error("failed to parse code, check for syntax errors!")
         return comments
 
     def count_lines(self, code):
