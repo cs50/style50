@@ -85,7 +85,8 @@ class Python(StyleCheck):
 
 
 class Js(C):
-    extensions = ["js"]
+    # Disable JS until we settle on a style guide for it
+    extensions =  [] # ["js"]
     magic_names = []
 
     # Taken from http://code.activestate.com/recipes/496882-javascript-code-compression/
@@ -101,7 +102,9 @@ class Js(C):
 
     # TODO: Determine which options, if any should be passed here
     def style(self, code):
-        return jsbeautifier.beautify(code)
+        opts = jsbeautifier.default_options()
+        opts.end_with_newline = True
+        return jsbeautifier.beautify(code, opts)
 
 
 class Java(C):
