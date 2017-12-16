@@ -64,7 +64,6 @@ def main():
     parser.add_argument("-i", "--ignore", action="append",
                         help="paths to be ignored")
 
-
     main.args = parser.parse_args()
     ignore = main.args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
     Style50(main.args.file, ignore=ignore, output=main.args.output).run()

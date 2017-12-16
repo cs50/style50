@@ -60,7 +60,6 @@ class Style50(object):
     magic_map = {}
 
     def __init__(self, paths, ignore=[], output="character"):
-
         try:
             ignore = [re.compile(i) for i in ignore]
         except re.error:
@@ -68,12 +67,11 @@ class Style50(object):
 
         # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
         self.files = filter(lambda p: not any(reg.match(p) for reg in ignore),
-            itertools.chain.from_iterable(
-                [path] if not os.path.isdir(path)
-                else (os.path.join(root, file)
-                      for root, _, files in os.walk(path)
-                      for file in files)
-                for path in paths))
+                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                          else (os.path.join(root, file)
+                                                                for root, _, files in os.walk(path)
+                                                                for file in files)
+                                                          for path in paths))
 
         # Set run function as apropriate for output mode.
         if output == "score":
