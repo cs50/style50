@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 import json
+import os
 import signal
 import sys
 import traceback
@@ -60,9 +61,13 @@ def main():
     parser.add_argument("-E", "--extensions", action="version",
                         version=json.dumps(list(Style50.extension_map.keys())),
                         help="print supported file extensions (as JSON list) and exit")
+    parser.add_argument("-i", "--ignore", action="append",
+                        help="paths to be ignored")
+
 
     main.args = parser.parse_args()
-    Style50(main.args.file, output=main.args.output).run()
+    ignore = main.args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
+    Style50(main.args.file, ignore=ignore, output=main.args.output).run()
 
 
 # Necessary so `console_scripts` can extract the main function
