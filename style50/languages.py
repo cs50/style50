@@ -15,7 +15,7 @@ class C(StyleCheck):
 
     astyle = [
         "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
-        "--align-pointer=name", "--pad-comma",
+        "--align-pointer=name", "--pad-comma", "--unpad-paren",
         "--pad-header", "--pad-oper", "--max-code-length=100",
         "--convert-tabs", "--indent=spaces=4",
         "--indent-continuation=1", "--indent-switches",
