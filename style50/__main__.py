@@ -61,8 +61,8 @@ def main():
     parser.add_argument("-E", "--extensions", action="version",
                         version=json.dumps(list(Style50.extension_map.keys())),
                         help="print supported file extensions (as JSON list) and exit")
-    parser.add_argument("-i", "--ignore", action="append",
-                        help="paths to be ignored")
+    parser.add_argument("-i", "--ignore", action="append", metavar="PATTERN",
+                        help="paths/patterns to be ignored")
 
     main.args = parser.parse_args()
     ignore = main.args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
