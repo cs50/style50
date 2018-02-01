@@ -6,6 +6,7 @@ import cgi
 import errno
 import difflib
 import fcntl
+import fnmatch
 import itertools
 import json
 import os
@@ -61,9 +62,10 @@ class Style50(object):
 
     def __init__(self, paths, ignore=[], output="character"):
         try:
-            ignore = [re.compile(i) for i in ignore]
+            # Translate each ignore pattern into a regex and compile it
+            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
         except re.error:
-            raise Error("failed to parse regular expression")
+            raise Error("failed to parse ignore pattern")
 
         # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
         self.files = filter(lambda p: not any(reg.match(p) for reg in ignore),
