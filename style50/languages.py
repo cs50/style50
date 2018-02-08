@@ -15,12 +15,12 @@ class C(StyleCheck):
 
     astyle = [
         "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
-        "--align-pointer=name", "--pad-comma",
-        "--pad-header", "--pad-oper", "--max-code-length=100",
+        "--align-pointer=name", "--pad-comma", "--unpad-paren",
+        "--pad-header", "--pad-oper", "--max-code-length=132",
         "--convert-tabs", "--indent=spaces=4",
         "--indent-continuation=1", "--indent-switches",
         "--lineend=linux", "--min-conditional-indent=1",
-        "--style=allman"
+        "--options=none", "--style=allman"
     ]
 
     # Match (1) /**/ comments, and (2) // comments.
@@ -81,7 +81,7 @@ class Python(StyleCheck):
 
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
-        return autopep8.fix_code(code, options={"max_line_length": 100, "ignore_local_config": True})
+        return autopep8.fix_code(code, options={"max_line_length": 132, "ignore_local_config": True})
 
 
 class Js(C):
