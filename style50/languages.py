@@ -11,7 +11,7 @@ from . import StyleCheck, Error
 
 class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
-    magic_names = ["C source"]
+    magic_names = [] # Only recognize C files by their extension
 
     astyle = [
         "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
