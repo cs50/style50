@@ -6,6 +6,7 @@ import cgi
 import errno
 import difflib
 import fcntl
+import fnmatch
 import itertools
 import json
 import os
@@ -59,14 +60,20 @@ class Style50(object):
     # Dict that maps substrings of libmagic's outputs to classes. Used as fallback when file extension unrecognized
     magic_map = {}
 
-    def __init__(self, paths, output="character"):
-        # Creates a generator of all the files found recursively in `paths`.
-        self.files = itertools.chain.from_iterable(
-            [path] if not os.path.isdir(path)
-            else (os.path.join(root, file)
-                  for root, _, files in os.walk(path)
-                  for file in files)
-            for path in paths)
+    def __init__(self, paths, ignore=[], output="character"):
+        try:
+            # Translate each ignore pattern into a regex and compile it
+            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
+        except re.error:
+            raise Error("failed to parse ignore pattern")
+
+        # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
+        self.files = filter(lambda p: not any(reg.match(p) for reg in ignore),
+                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                          else (os.path.join(root, file)
+                                                                for root, _, files in os.walk(path)
+                                                                for file in files)
+                                                          for path in paths))
 
         # Set run function as apropriate for output mode.
         if output == "score":
