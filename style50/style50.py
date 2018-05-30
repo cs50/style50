@@ -61,6 +61,8 @@ class Style50(object):
     magic_map = {}
 
     def __init__(self, paths, ignore=[], output="character"):
+        self._warn_chars = set()
+
         try:
             # Translate each ignore pattern into a regex and compile it
             ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
@@ -81,7 +83,6 @@ class Style50(object):
         elif output == "json":
             self.run = self.run_json
         else:
-            self._warn_chars = set()
             self.run = self.run_diff
             # Set diff function as needed
             if output == "character":
