@@ -81,17 +81,11 @@ class Python(StyleCheck):
 
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
-        ignore = autopep8.DEFAULT_IGNORE.split(",")
-        try:
-            ignore.remove("E226") # Don't ignore unpadded operators
-        except ValueError:
-            pass
-        return autopep8.fix_code(code, options={"max_line_length": 132, "ignore_local_config": True, "ignore": ignore})
+        return autopep8.fix_code(code, options={"max_line_length": 132, "ignore_local_config": True})
 
 
 class Js(C):
-    # Disable JS until we settle on a style guide for it
-    extensions = []  # ["js"]
+    extensions = ["js"]
     magic_names = []
 
     # Taken from http://code.activestate.com/recipes/496882-javascript-code-compression/
@@ -109,6 +103,10 @@ class Js(C):
     def style(self, code):
         opts = jsbeautifier.default_options()
         opts.end_with_newline = True
+        opts.operator_position = "preserve-newline"
+        opts.wrap_line_length = 132
+        opts.brace_style = "collapse,preserve-inline"
+        opts.keep_array_indentation = True
         return jsbeautifier.beautify(code, opts)
 
 

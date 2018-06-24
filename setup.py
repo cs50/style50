@@ -10,7 +10,7 @@ setup(
         "Topic :: Utilities"
     ],
     description="This is style50, with which code can be checked against the CS50 style guide",
-    install_requires=["argparse", "autopep8>=1.3.3", "icdiff", "jsbeautifier==1.6.14", "python-magic", "six", "termcolor"],
+    install_requires=["argparse", "autopep8>=1.3.3", "icdiff", "jsbeautifier", "python-magic", "termcolor"],
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",

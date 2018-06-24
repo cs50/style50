@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-
 from abc import ABCMeta, abstractmethod, abstractproperty
 import cgi
 import errno
@@ -18,7 +15,6 @@ from termios import TIOCGWINSZ
 
 import icdiff
 import magic
-import six
 import termcolor
 
 
@@ -35,7 +31,7 @@ def get_terminal_size(fallback=(80, 24)):
         try:
             # Make WINSIZE call to terminal
             data = fcntl.ioctl(stream.fileno(), TIOCGWINSZ, b"\x00\x00\00\x00")
-        except (IOError, OSError):
+        except OSError:
             pass
         else:
             # Unpack two shorts from ioctl call
@@ -50,9 +46,9 @@ def get_terminal_size(fallback=(80, 24)):
 COLUMNS, LINES = get_terminal_size()
 
 
-class Style50(object):
+class Style50:
     """
-    Class which checks a list of files/directories for style.
+    Class that checks a list of files/directories for style.
     """
 
     # Dict that maps file extensions to check classes
@@ -61,6 +57,7 @@ class Style50(object):
     magic_map = {}
 
     def __init__(self, paths, ignore=[], output="character"):
+
         self._warn_chars = set()
 
         try:
@@ -288,8 +285,13 @@ class Style50(object):
                     self._warn_chars.add((dtype, "\\n"))
                     # Show added/removed newlines.
                     line += [fmt(r"\n"), transition(dtype, " ")]
-                yield "".join(line)
-                line = [transition(" ", dtype)]
+
+                # Don't yield a line if we are removing a newline
+                if dtype != "-":
+                    yield "".join(line)
+                    line.clear()
+
+                line.append(transition(" ", dtype))
             elif dtype != " " and d[2] == "\t":
                 # Show added/removed tabs.
                 line.append(fmt("\\t"))
@@ -323,8 +325,7 @@ class StyleMeta(ABCMeta):
         return cls
 
 
-@six.add_metaclass(StyleMeta)
-class StyleCheck(object):
+class StyleCheck(metaclass=StyleMeta):
     """
     Abstact base class for all style checks. All children must define `extensions` and
     implement `style`.
@@ -379,12 +380,10 @@ class StyleCheck(object):
         try:
             child = subprocess.Popen(command, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, **stdin)
-        except (OSError, IOError) as e:
-            if e.errno == errno.ENOENT:
-                # Extract name of command.
-                name = command.split(' ', 1)[0] if isinstance(command, str) else command[0]
-                e = DependencyError(name)
-            raise e
+        except FileNotFoundError as e:
+            # Extract name of command.
+            name = command.split(' ', 1)[0] if isinstance(command, str) else command[0]
+            raise DependencyError(name)
 
         stdout, _ = child.communicate(input=input)
         if exit is not None and child.returncode != exit:
