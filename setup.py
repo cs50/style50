@@ -14,7 +14,7 @@ setup(
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
-    license="MIT",
+    license="GPLv3",
     packages=find_packages(),
     entry_points={
         "console_scripts": ["style50=style50.__main__:main"],
