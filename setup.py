@@ -14,7 +14,6 @@ setup(
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
-    license="MIT",
     py_requires=">=3.6",
     license="GPLv3",
     packages=find_packages(),
