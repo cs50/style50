@@ -16,6 +16,7 @@ setup(
     name="style50",
     license="MIT",
     py_requires=">=3.6",
+    license="GPLv3",
     packages=find_packages(),
     entry_points={
         "console_scripts": ["style50=style50.__main__:main"],
