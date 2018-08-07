@@ -75,7 +75,7 @@ class Python(StyleCheck):
     def count_lines(self, code):
         """
         count_lines ignores blank lines by default,
-        but blank lines are relavent to style per pep8
+        but blank lines are relevant to style per pep8
         """
         return len(code.splitlines())
 

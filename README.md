@@ -13,10 +13,10 @@ Along with most of CS50's command line tools, `style50` supports being run on Wi
 ## Usage
 
 ```
-usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] FILE [FILE ...]
+usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] file [file ...]
 
 positional arguments:
-  FILE                  file or directory to lint
+  file                  file or directory to lint
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -28,7 +28,6 @@ optional arguments:
   -E, --extensions      print supported file extensions (as JSON list) and
                         exit
   -i PATTERN, --ignore PATTERN
-                        paths/patterns to be ignored
 ```
 
 `character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).

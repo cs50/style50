@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import cgi
 import errno
 import difflib
@@ -395,7 +395,8 @@ class StyleCheck(metaclass=StyleMeta):
         Returns number of coments in `code`. If not implemented by child, will not warn about comments.
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def extensions(self):
         """
         List of file extensions that check should be run on.
