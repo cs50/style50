@@ -28,6 +28,7 @@ optional arguments:
   -E, --extensions      print supported file extensions (as JSON list) and
                         exit
   -i PATTERN, --ignore PATTERN
+                        paths/patterns to be ignored
 ```
 
 `character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
