@@ -152,6 +152,7 @@ class Style50:
                 }
 
         json.dump(checks, sys.stdout, indent=4)
+        print()
 
     def run_score(self):
         """
@@ -395,7 +396,6 @@ class StyleCheck(metaclass=StyleMeta):
         Returns number of coments in `code`. If not implemented by child, will not warn about comments.
         """
 
-    @property
     @abstractmethod
     def extensions(self):
         """
