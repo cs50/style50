@@ -357,7 +357,7 @@ class StyleCheck(metaclass=StyleMeta):
 
         self.lines = self.count_lines(self.styled)
         try:
-            self.score = 1 - self.diffs / self.lines
+            self.score = min(1 - self.diffs / self.lines, 0)
         except ZeroDivisionError:
             raise Error("file is empty")
 
