@@ -13,10 +13,10 @@ Along with most of CS50's command line tools, `style50` supports being run on Wi
 ## Usage
 
 ```
-usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] FILE [FILE ...]
+usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] file [file ...]
 
 positional arguments:
-  FILE                  file or directory to lint
+  file                  file or directory to lint
 
 optional arguments:
   -h, --help            show this help message and exit
