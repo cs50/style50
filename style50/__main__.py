@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-
 import json
 import os
 import signal
@@ -12,45 +9,28 @@ import termcolor
 
 from . import Style50, Error, __version__
 
-# require python 2.7+.
-if sys.version_info < (2, 7):
-    sys.exit("You have an old version of python. Install version 2.7 or higher.")
-
-
-# Exit zero on Ctrl-C.
-def handler(number, frame):
-    sys.exit(1)
-
-
 def excepthook(etype, value, tb):
-    if etype is Error:
+    if isinstance(value, Error):
         termcolor.cprint(value.msg, "red", file=sys.stderr)
+    elif isinstance(value, KeyboardInterrupt):
+        sys.exit(1)
     else:
         termcolor.cprint("Sorry, something's wrong! "
                          "Let sysadmins@cs50.harvard.edu know!",
                          "red", file=sys.stderr)
 
-    # Main might not have initialized args yet.
-    try:
-        verbose = main.args.verbose
-    except AttributeError:
-        verbose = True
-
-    if verbose:
+    if excepthook.verbose:
         traceback.print_exception(etype, value, tb)
-
 
 # Set global exception handler.
 sys.excepthook = excepthook
+excepthook.verbose = True
 
 
 def main():
-    # Listen for Ctrl-C.
-    signal.signal(signal.SIGINT, handler)
-
     # Define command-line arguments.
     parser = argparse.ArgumentParser(prog="style50")
-    parser.add_argument("file", metavar="FILE", nargs="+", help="file or directory to lint")
+    parser.add_argument("file", nargs="+", help="file or directory to lint")
     parser.add_argument("-o", "--output", action="store", default="character",
                         choices=["character", "split", "unified", "score", "json"], metavar="MODE",
                         help="output mode, which can be character (default), split, unified, score, or json")
@@ -64,9 +44,9 @@ def main():
     parser.add_argument("-i", "--ignore", action="append", metavar="PATTERN",
                         help="paths/patterns to be ignored")
 
-    main.args = parser.parse_args()
-    ignore = main.args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
-    Style50(main.args.file, ignore=ignore, output=main.args.output).run()
+    args = parser.parse_args()
+    ignore = args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
+    Style50(args.file, ignore=ignore, output=args.output).run()
 
 
 # Necessary so `console_scripts` can extract the main function
