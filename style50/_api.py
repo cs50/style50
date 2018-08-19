@@ -17,6 +17,8 @@ import icdiff
 import magic
 import termcolor
 
+__all__ = ["Style50", "StyleCheck", "Error"]
+
 
 def get_terminal_size(fallback=(80, 24)):
     """
