@@ -17,6 +17,8 @@ import icdiff
 import magic
 import termcolor
 
+__all__ = ["Style50", "StyleCheck", "Error"]
+
 
 def get_terminal_size(fallback=(80, 24)):
     """
@@ -199,7 +201,7 @@ class Style50:
 
         try:
             with open(file) as f:
-                code = f.read()
+                code = "\n".join(line.rstrip() for line in f)
         except UnicodeDecodeError:
             raise Error("file does not seem to contain text, skipping...")
 
