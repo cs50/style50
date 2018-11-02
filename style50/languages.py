@@ -70,6 +70,8 @@ class Python(StyleCheck):
                 prev_type = t_type
         except TokenError:
             raise Error("failed to parse code, check for syntax errors!")
+        except IndentationError as e:
+            raise Error("make sure indentation is consistent on line {}!".format(e.lineno))
         return comments
 
     def count_lines(self, code):
