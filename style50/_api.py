@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
-import cgi
 import errno
 import difflib
 import fcntl
 import fnmatch
+import html
 import itertools
 import json
 import os
@@ -247,7 +247,7 @@ class Style50:
                 tags.append("<{}{}>".format(tag[0], "ins" if tag[1] == "+" else "del"))
             return "".join(tags)
 
-        return self._char_diff(old, new, html_transition, fmt=cgi.escape)
+        return self._char_diff(old, new, html_transition, fmt=html.escape)
 
     def char_diff(self, old, new):
         """
