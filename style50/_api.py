@@ -158,7 +158,7 @@ class Style50:
                     "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(file_results.original, file_results.styled))),
                 })
 
-        json.dump({"version": __version__, "results": results}, sys.stdout, indent=4)
+        json.dump({"version": __version__, "results": results}, sys.stdout)
         print()
 
     def run_score(self):
