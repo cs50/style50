@@ -139,7 +139,7 @@ class Style50:
         """
         Run checks on self.files, then print out JSON results
         """
-        json.dump(self._json_results(), sys.stdout, indent=4)
+        json.dump(self._json_results(), sys.stdout)
         print()
 
     def run_score(self):
@@ -175,6 +175,7 @@ class Style50:
 
                 file_results.append({
                     "name": file,
+                    "score": results.score,
                     "comments": results.comment_ratio >= results.COMMENT_MIN,
                     "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
                 })
