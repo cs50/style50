@@ -137,51 +137,58 @@ class Style50:
 
     def run_json(self):
         """
-        Run checks on self.files, printing json object
-        containing information relavent to the CS50 IDE plugin at the end.
+        Run checks on self.files, then print out JSON results
         """
-
-        results = []
-        for file in self.files:
-            try:
-                file_results = self._check(file)
-            except Error as e:
-                results.append({
-                    "file": file,
-                    "error": e.msg
-                })
-            else:
-                results.append({
-                    "file": file,
-                    "score": file_results.score,
-                    "comments": file_results.comment_ratio >= file_results.COMMENT_MIN,
-                    "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(file_results.original, file_results.styled))),
-                })
-
-        json.dump({"version": __version__, "results": results}, sys.stdout)
+        json.dump(self._json_results(), sys.stdout, indent=4)
         print()
 
     def run_score(self):
         """
         Run checks on self.files, printing raw percentage to stdout.
         """
+        results = self._json_results()
+        for file in results["files"]:
+            if file.get("error"):
+                termcolor.cprint(file["error"], "yellow", file=sys.stderr)
+        print(results["score"])
+
+
+    def _json_results(self):
+        """
+        Run checks on self.files, returning a jsonable dict
+        """
         diffs = 0
         lines = 0
+        self.files = list(self.files)
+        file_results = []
         for file in self.files:
-
             try:
                 results = self._check(file)
             except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
-                continue
+                file_results.append({
+                    "name": file,
+                    "error": e.msg
+                })
+            else:
+                diffs += results.diffs
+                lines += results.lines
 
-            diffs += results.diffs
-            lines += results.lines
+                file_results.append({
+                    "name": file,
+                    "comments": results.comment_ratio >= results.COMMENT_MIN,
+                    "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
+                })
 
         try:
-            print(max(1 - diffs / lines, 0.0))
+            score = max(1 - diffs / lines, 0.0)
         except ZeroDivisionError:
-            print(0.0)
+            score = 0.0
+
+        return {
+            "version": __version__,
+            "files": file_results,
+            "score": score
+        }
 
     def _check(self, file):
         """
