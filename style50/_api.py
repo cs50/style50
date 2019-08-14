@@ -91,7 +91,7 @@ class Style50:
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as html_file:
                 html_file.write(renderer.to_html(**results))
             if os.environ.get("CS50_IDE_TYPE"):
-                subprocess.check_call(["c9", "exec", "renderstyleresults", html])
+                subprocess.check_call(["c9", "exec", "renderresults", "style50", html])
             else:
                 termcolor.cprint(f"To see results in your browser go to file://{html_file.name}", "white", attrs=["bold"])
         else:
