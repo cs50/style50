@@ -11,15 +11,17 @@ import re
 import struct
 import subprocess
 import sys
+import tempfile
 from termios import TIOCGWINSZ
 
 import icdiff
 import magic
 import termcolor
 
-from . import __version__
+from . import __version__, renderer
 
 __all__ = ["Style50", "StyleCheck", "Error"]
+
 
 
 def get_terminal_size(fallback=(80, 24)):
@@ -60,32 +62,16 @@ class Style50:
     # Dict that maps substrings of libmagic's outputs to classes. Used as fallback when file extension unrecognized
     magic_map = {}
 
-    def __init__(self, paths, ignore=[], output="character"):
+    def __init__(self, output="character"):
 
         self._warn_chars = set()
 
-        try:
-            # Translate each ignore pattern into a regex and compile it
-            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
-        except re.error:
-            raise Error("failed to parse ignore pattern")
-
-        # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
-        self.files = filter(lambda p: not any(reg.match(p) for reg in ignore),
-                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
-                                                          else (os.path.join(root, file)
-                                                                for root, _, files in os.walk(path)
-                                                                for file in files)
-                                                          for path in paths))
-
         # Set run function as apropriate for output mode.
         if output == "score":
-            self.run = self.run_score
-        elif output == "json":
-            self.run = self.run_json
+            self.diff = lambda old, new: ""
+        elif output in ["json", "html"]:
+            self.diff = self.html_diff
         else:
-            self.run = self.run_diff
-            # Set diff function as needed
             if output == "character":
                 self.diff = self.char_diff
             elif output == "split":
@@ -95,73 +81,52 @@ class Style50:
             else:
                 raise Error("invalid output type")
 
-    def run_diff(self):
-        """
-        Run checks on self.files, printing diff of styled/unstyled output to stdout.
-        """
-        files = tuple(self.files)
-        # Use same header as more.
-        header, footer = (termcolor.colored("{0}\n{{}}\n{0}\n".format(
-            ":" * 14), "cyan"), "\n") if len(files) > 1 else ("", "")
+        self.output = output
 
-        for file in files:
-            print(header.format(file), end="")
-            try:
-                results = self._check(file)
-            except Error as e:
-                termcolor.cprint(e.msg, "yellow", file=sys.stderr)
-                continue
+    def run(self, *args, **kwargs):
+        """Wraps Style50.check and renders the results using the renderer determined by self.output"""
+        results = self.check(*args, **kwargs)
 
-            # Display results
-            if results.diffs:
-                print()
-                print(*self.diff(results.original, results.styled), sep="\n")
-                print()
-                conjunction = "And"
+        if self.output == "html":
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as html_file:
+                html_file.write(renderer.to_html(**results))
+            if os.environ.get("CS50_IDE_TYPE"):
+                raise NotImplementedError()
+                subprocess.check_call(["c9", "exec", "renderstyleresults", html])
             else:
-                termcolor.cprint("Looks good!", "green")
-                conjunction = "But"
+                termcolor.cprint(f"To see results in your browser go to file://{html_file.name}", "white", attrs=["bold"])
+        else:
+            if self.output == "json":
+                render = renderer.to_json
+            elif self.output == "score":
+                render = renderer.to_ansi_score
+            else:
+                render = renderer.to_ansi
+            print(render(**results))
 
-            if results.diffs:
-                for type, c in sorted(self._warn_chars):
-                    color, verb = ("on_green", "insert") if type == "+" else ("on_red", "delete")
-                    termcolor.cprint(c, None, color, end="")
-                    termcolor.cprint(" means that you should {} a {}.".format(
-                        verb, "newline" if c == "\\n" else "tab"), "yellow")
 
-            if results.comment_ratio < results.COMMENT_MIN:
-                termcolor.cprint("{} consider adding more comments!".format(conjunction), "yellow")
-
-            if (results.comment_ratio < results.COMMENT_MIN or self._warn_chars) and results.diffs:
-                print()
-
-    def run_json(self):
+    def check(self, paths, ignore=[]):
         """
-        Run checks on self.files, then print out JSON results
+        Run checks on paths recursively, ignoring pataterns in ignore, returning a dict of results
         """
-        json.dump(self._json_results(), sys.stdout)
-        print()
+        try:
+            # Translate each ignore pattern into a regex and compile it
+            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
+        except re.error:
+            raise Error("failed to parse ignore pattern")
 
-    def run_score(self):
-        """
-        Run checks on self.files, printing raw percentage to stdout.
-        """
-        results = self._json_results()
-        for file in results["files"]:
-            if file.get("error"):
-                termcolor.cprint(file["error"], "yellow", file=sys.stderr)
-        print(results["score"])
+        # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
+        files = list(filter(lambda p: not any(reg.match(p) for reg in ignore),
+                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                          else (os.path.join(root, file)
+                                                                for root, _, files in os.walk(path)
+                                                                for file in files)
+                                                          for path in paths)))
 
-
-    def _json_results(self):
-        """
-        Run checks on self.files, returning a jsonable dict
-        """
         diffs = 0
         lines = 0
-        self.files = list(self.files)
         file_results = []
-        for file in self.files:
+        for file in files:
             try:
                 results = self._check(file)
             except Error as e:
@@ -177,7 +142,9 @@ class Style50:
                     "name": file,
                     "score": results.score,
                     "comments": results.comment_ratio >= results.COMMENT_MIN,
-                    "diff": "<pre>{}</pre>".format("\n".join(self.html_diff(results.original, results.styled))),
+                    "diff": "\n".join(self.diff(results.original, results.styled)),
+                    "warn_chars": sorted(self._warn_chars),
+                    "loc": lines
                 })
 
         try:
@@ -190,6 +157,7 @@ class Style50:
             "files": file_results,
             "score": score
         }
+
 
     def _check(self, file):
         """
@@ -260,7 +228,7 @@ class Style50:
                 tags.append("<{}{}>".format(tag[0], "ins" if tag[1] == "+" else "del"))
             return "".join(tags)
 
-        return self._char_diff(old, new, html_transition, fmt=html.escape)
+        return self._char_diff(old, new, html_transition, fmt=html.escape, prefix="<pre>", suffix="</pre>")
 
     def char_diff(self, old, new):
         """
@@ -273,11 +241,13 @@ class Style50:
 
         return self._char_diff(old, new, color_transition)
 
-    def _char_diff(self, old, new, transition, fmt=lambda c: c):
+    def _char_diff(self, old, new, transition, fmt=lambda c: c, prefix=None, suffix=None):
         """
         Returns a char-based diff between `old` and `new` where each character
         is formatted by `fmt` and transitions between blocks are determined by `transition`.
         """
+        if prefix is not None:
+            yield prefix
 
         differ = difflib.ndiff(old, new)
 
@@ -320,6 +290,9 @@ class Style50:
         # Only print last line if it contains non-ANSI characters.
         if re.sub(r"\x1b[^m]*m", "", last):
             yield last
+
+        if suffix is not None:
+            yield suffix
 
 
 class StyleMeta(ABCMeta):
