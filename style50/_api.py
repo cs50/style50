@@ -227,7 +227,7 @@ class Style50:
                 tags.append("<{}{}>".format(tag[0], "ins" if tag[1] == "+" else "del"))
             return "".join(tags)
 
-        return itertools.chain(["<pre>"], self._char_diff(old, new, html_transition, fmt=html.escape), ["</pre>"])
+        return self._char_diff(old, new, html_transition, fmt=html.escape, prefix="<pre>", suffix="</pre>")
 
     def char_diff(self, old, new):
         """
@@ -240,11 +240,13 @@ class Style50:
 
         return self._char_diff(old, new, color_transition)
 
-    def _char_diff(self, old, new, transition, fmt=lambda c: c):
+    def _char_diff(self, old, new, transition, fmt=lambda c: c, prefix=None, suffix=None):
         """
         Returns a char-based diff between `old` and `new` where each character
         is formatted by `fmt` and transitions between blocks are determined by `transition`.
         """
+        if prefix is not None:
+            yield prefix
 
         differ = difflib.ndiff(old, new)
 
@@ -287,6 +289,9 @@ class Style50:
         # Only print last line if it contains non-ANSI characters.
         if re.sub(r"\x1b[^m]*m", "", last):
             yield last
+
+        if suffix is not None:
+            yield suffix
 
 
 class StyleMeta(ABCMeta):
