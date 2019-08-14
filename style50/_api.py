@@ -143,7 +143,8 @@ class Style50:
                     "score": results.score,
                     "comments": results.comment_ratio >= results.COMMENT_MIN,
                     "diff": "\n".join(self.diff(results.original, results.styled)),
-                    "warn_chars": sorted(self._warn_chars)
+                    "warn_chars": sorted(self._warn_chars),
+                    "loc": lines
                 })
 
         try:
