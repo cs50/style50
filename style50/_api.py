@@ -227,7 +227,7 @@ class Style50:
                 tags.append("<{}{}>".format(tag[0], "ins" if tag[1] == "+" else "del"))
             return "".join(tags)
 
-        return self._char_diff(old, new, html_transition, fmt=html.escape)
+        return itertools.chain(["<pre>"], self._char_diff(old, new, html_transition, fmt=html.escape), ["</pre>"])
 
     def char_diff(self, old, new):
         """
