@@ -63,7 +63,7 @@ def to_ansi_score(files, score, version):
 
 
 def to_json(files, score, version):
-    return json.dumps({"files": files, "score": score, "version": version})
+    return json.dumps({"files": files, "score": score, "version": version}, indent=4)
 
 
 def to_html(files, score, version):
