@@ -88,8 +88,9 @@ class Style50:
         results = self.check(*args, **kwargs)
 
         if self.output == "html":
+            html = renderer.to_html(**results)
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as html_file:
-                html_file.write(renderer.to_html(**results))
+                html_file.write(html)
             if os.environ.get("CS50_IDE_TYPE"):
                 subprocess.check_call(["c9", "exec", "renderresults", "style50", html])
             else:
