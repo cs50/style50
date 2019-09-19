@@ -58,7 +58,7 @@ def to_ansi_score(files, score, version):
     for file in files:
         if file.get("error"):
             lines.append(termcolor.colored(file["error"], "yellow"))
-    lines.append(score)
+    lines.append(str(score))
     return "\n".join(lines)
 
 
