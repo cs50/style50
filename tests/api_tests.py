@@ -1,16 +1,10 @@
-import unittest
-import os
-import sys
 import contextlib
+import io
+import json
+import os
 import pathlib
 import tempfile
-import io
-import re
-import logging
-import subprocess
-import time
-import termcolor
-import pexpect
+import unittest
 
 import style50._api
 
@@ -52,6 +46,11 @@ class TestStyle50_Init(unittest.TestCase):
 class TestStyle50_Check(unittest.TestCase):
     def setUp(self):
         self.style = style50._api.Style50("score")
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_path = pathlib.Path(self.temp_dir.name)
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
 
     def test_c_0(self):
         result = self.style.check(["tests/fixtures/hello0.c"])
@@ -59,7 +58,7 @@ class TestStyle50_Check(unittest.TestCase):
 
     def test_c_1(self):
         result = self.style.check(["tests/fixtures/hello1.c"])
-        self.assertLessEqual(result["score"], .5)
+        self.assertAlmostEqual(result["score"], .416, 2)
 
     def test_java_0(self):
         result = self.style.check(["tests/fixtures/hello0.java"])
@@ -67,7 +66,7 @@ class TestStyle50_Check(unittest.TestCase):
 
     def test_java_1(self):
         result = self.style.check(["tests/fixtures/hello1.java"])
-        self.assertLessEqual(result["score"], .5)
+        self.assertAlmostEqual(result["score"], .4, 2)
 
     def test_js_0(self):
         result = self.style.check(["tests/fixtures/hello0.js"])
@@ -75,7 +74,7 @@ class TestStyle50_Check(unittest.TestCase):
     
     def test_js_1(self):
         result = self.style.check(["tests/fixtures/hello1.js"])
-        self.assertLessEqual(result["score"], .3)
+        self.assertAlmostEqual(result["score"], 0)
 
     def test_python_0(self):
         result = self.style.check(["tests/fixtures/hello0.py"])
@@ -83,17 +82,18 @@ class TestStyle50_Check(unittest.TestCase):
 
     def test_python_1(self):
         result = self.style.check(["tests/fixtures/hello1.py"])
-        self.assertLessEqual(result["score"], .8)
+        self.assertAlmostEqual(result["score"], .57, 2)
 
     def test_binary(self):
         result = self.style.check(["tests/fixtures/binary.c"])
         self.assertTrue("file does not seem to contain text, skipping..." in result["files"][0].values())
 
     def test_empty(self):
-        with open("tests/fixtures/empty.c", "w") as f:
+        fname = self.temp_path / "empty.c"
+        with open(fname, "w") as f:
             pass
 
-        result = self.style.check(["tests/fixtures/empty.c"])
+        result = self.style.check([str(fname)])
         self.assertTrue("file is empty" in result["files"][0].values())
 
     def test_nonexistent(self):
@@ -101,12 +101,41 @@ class TestStyle50_Check(unittest.TestCase):
         self.assertTrue("file \"nonexistent.c\" not found" in result["files"][0].values())
 
     def test_unknown_type(self):
-        with open("tests/fixtures/file.mystery", "w") as f:
+        fname = self.temp_path / "file.mystery"
+        with open(fname, "w") as f:
             pass
 
-        result = self.style.check(["tests/fixtures/file.mystery"])
-        self.assertTrue("unknown file type \"tests/fixtures/file.mystery\", skipping..." in result["files"][0].values())
+        result = self.style.check([str(fname)])
+        self.assertTrue(f"unknown file type \"{fname}\", skipping..." in result["files"][0].values())
+
+
+class TestStyle50_Run(unittest.TestCase):
+    def setUp(self):
+        self.paths = ["tests/fixtures/hello0.c"]
+
+    def test_json(self):
+        style = style50._api.Style50("json")
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            style.run(self.paths)
+
+        expected = style.check(self.paths)
+        received = json.loads(f.getvalue())
+        self.assertDictEqual(received, expected)
+
+    def test_score(self):
+        style = style50._api.Style50("score")
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            style.run(self.paths)
+
+        expected = style.check(self.paths)
+        received = f.getvalue()
+        self.assertEqual(received.strip(), str(expected["score"]))
 
 
 if __name__ == '__main__':
+    os.chdir("..")
     unittest.main()
