@@ -10,7 +10,7 @@ script:
 jobs:
   include:
   - stage: deploy
-    python: '3.4'
+    python: '3.6'
     deploy:
     - provider: script
       script: 'curl --fail --data "{ \"tag_name\": \"v$(python setup.py --version)\",
