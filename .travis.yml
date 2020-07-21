@@ -3,7 +3,10 @@ python:
 - '3.6'
 branches:
   except: "/^v\\d/"
-install: pip install .
+install:
+  - sudo apt update
+  - sudo apt -y install astyle
+  - pip install .
 script:
   - python3 -m style50 --help
   - python3 -m tests
