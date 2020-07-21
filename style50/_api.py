@@ -208,25 +208,13 @@ class Style50:
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
-        i = 1
-        dotted = True
         for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
             if diff[0] == " ":
-                if not dotted:
-                    yield "..."
-                dotted = True
+                yield diff
             elif diff[0] == "?":
                 continue
             else:
-                dotted = False
-                if diff[0] == "+" and len(diff) == 2:
-                    diff = "+ add a new line at the start of this line"
-                elif diff[0] == "-" and len(diff) == 2:
-                    diff = "- remove this line"
-                text = f" {diff[2:]}"
-                yield f"{i: <6}" + termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
-            if diff[0] in [" ", "+"]:
-                i += 1
+                yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
 
     def html_diff(self, old, new):
         """

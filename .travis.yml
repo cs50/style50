@@ -3,9 +3,14 @@ python:
 - '3.6'
 branches:
   except: "/^v\\d/"
+before-install:
+  - wget https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz/download -O ~/astyle.tar.gz
+  - tar -C ~ -xf ~/astyle.tar.gz
+  - cd ~/astyle/build/clang
+  - make release
+  - sudo mv bin/astyle /usr/local/bin/astyle
+  - cd "$TRAVIS_BUILD_DIR"
 install:
-  - sudo apt update
-  - sudo apt -y install astyle
   - pip install .
 script:
   - python3 -m style50 --help
