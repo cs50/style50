@@ -3,15 +3,22 @@ python:
 - '3.6'
 branches:
   except: "/^v\\d/"
-install: pip install .
-script: style50 --help
+before-install:
+  - wget https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz/download -O ~/astyle.tar.gz
+  - tar -C ~ -xf ~/astyle.tar.gz
+  - cd ~/astyle/build/clang
+  - make release
+  - sudo mv bin/astyle /usr/local/bin/astyle
+  - cd "$TRAVIS_BUILD_DIR"
+install:
+  - pip install .
+script:
+  - python3 -m style50 --help
+  - python3 -m tests
 jobs:
   include:
   - stage: deploy
-    python: '3.4'
-    install: skip
-    before_script: skip
-    script: skip
+    python: '3.6'
     deploy:
     - provider: script
       script: 'curl --fail --data "{ \"tag_name\": \"v$(python setup.py --version)\",
