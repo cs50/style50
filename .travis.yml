@@ -5,7 +5,7 @@ branches:
   except: "/^v\\d/"
 install: pip install .
 script:
-  - style50 --help
+  - python3 -m style50 --help
   - python3 -m tests
 jobs:
   include:
