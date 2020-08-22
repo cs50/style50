@@ -107,7 +107,7 @@ class Style50:
 
     def check(self, paths, ignore=[]):
         """
-        Run checks on paths recursively, ignoring pataterns in ignore, returning a dict of results
+        Run checks on paths recursively, ignoring patterns in ignore, returning a dict of results
         """
         try:
             # Translate each ignore pattern into a regex and compile it
@@ -201,20 +201,28 @@ class Style50:
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
         return map(lambda l: l.rstrip(),
-                   icdiff.ConsoleDiff(cols=COLUMNS).make_table(old.splitlines(), new.splitlines()))
+                   icdiff.ConsoleDiff(cols=COLUMNS, line_numbers=True).make_table(old.splitlines(), new.splitlines()))
 
     @staticmethod
     def unified(old, new):
         """
         Returns a generator yielding a unified diff between `old` and `new`.
         """
+        line_num = 1
         for diff in difflib.ndiff(old.splitlines(), new.splitlines()):
-            if diff[0] == " ":
-                yield diff
-            elif diff[0] == "?":
+            # Skip lines indicating position of diffs
+            if diff[0] == "?":
                 continue
-            else:
-                yield termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
+
+            # Increment line number unless it's the new line showing the diff
+            if diff[0] != "+":
+                line_num = line_num +1
+
+            # Color output if a diff is indicated
+            if diff[0] == "-" or diff[0] == "+":
+                diff = termcolor.colored(diff, "red" if diff[0] == "-" else "green", attrs=["bold"])
+
+            yield str(line_num) + "\t" + diff
 
     def html_diff(self, old, new):
         """
@@ -256,6 +264,7 @@ class Style50:
 
         # Buffer for current line.
         line = []
+        line_num = 1
         while True:
             # Get next diff or None if we're at the end.
             d = next(differ, (None,))
@@ -267,6 +276,9 @@ class Style50:
                 break
 
             if d[2] == "\n":
+                line.insert(0, '\t')
+                line.insert(0, str(line_num))
+                line_num = line_num + 1
                 if dtype != " ":
                     self._warn_chars.add((dtype, "\\n"))
                     # Show added/removed newlines.
@@ -332,7 +344,7 @@ class StyleCheck(metaclass=StyleMeta):
         comments = self.count_comments(code)
 
         try:
-            # Avoid warning about comments if we don't knowhow to count them.
+            # Avoid warning about comments if we don't know how to count them.
             self.comment_ratio = 1. if comments is None else comments / self.count_lines(code)
         except ZeroDivisionError:
             raise Error("file is empty")
