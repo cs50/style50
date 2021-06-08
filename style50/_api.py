@@ -102,7 +102,19 @@ class Style50:
                 render = renderer.to_ansi_score
             else:
                 render = renderer.to_ansi
-            print(render(**results))
+            # print(render(**results))
+            line_num = 1
+            out_lines = 0
+            lines = results["files"][0]["diff"].splitlines()
+            for line in lines:
+                if line.find('\x1b[42') != -1 or line.find('\x1b[41') != -1 or \
+                    line.find('\x1b[32') != -1 or line.find('\x1b[31') != -1 or \
+                    line.find('\x1b[7;32') != -1 or line.find('\x1b[7;31') != -1:
+                    print(line_num, "\t: ", line)
+                    out_lines = out_lines + 1
+                line_num = line_num + 1
+            if out_lines == 0:
+                print(render(**results))
 
 
     def check(self, paths, ignore=[]):
@@ -201,7 +213,8 @@ class Style50:
         Returns a generator yielding the side-by-side diff of `old` and `new`).
         """
         return map(lambda l: l.rstrip(),
-                   icdiff.ConsoleDiff(cols=COLUMNS, line_numbers=True).make_table(old.splitlines(), new.splitlines()))
+                   icdiff.ConsoleDiff(cols=COLUMNS, line_numbers=True).make_table(
+                       old.splitlines(), new.splitlines(), '', '', True, 2))
 
     @staticmethod
     def unified(old, new):
