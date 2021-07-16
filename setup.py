@@ -24,6 +24,6 @@ setup(
         "console_scripts": ["style50=style50.__main__:main"],
     },
     url="https://github.com/cs50/style50",
-    version="2.7.4",
+    version="2.7.5",
     include_package_data=True,
 )
