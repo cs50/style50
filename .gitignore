@@ -1,7 +1,6 @@
 .*
 !.github
 !.gitignore
-!.travis.yml
 *.pyc
 __pycache__
 
