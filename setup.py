@@ -15,7 +15,7 @@ setup(
     description="This is style50, with which code can be checked against the CS50 style guide",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    install_requires=["argparse", "autopep8>=1.4.3", "icdiff", "jsbeautifier", "pycodestyle", "python-magic", "termcolor", "jinja2>=2.10"],
+    install_requires=["argparse", "autopep8>=1.4.3", "icdiff", "jsbeautifier", "pycodestyle==2.10.0", "python-magic", "termcolor", "jinja2>=2.10"],
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
@@ -26,6 +26,6 @@ setup(
         "console_scripts": ["style50=style50.__main__:main"],
     },
     url="https://github.com/cs50/style50",
-    version="2.7.6",
+    version="2.7.7",
     include_package_data=True,
 )
