@@ -8,7 +8,7 @@ This is style50, a tool with which code can be checked against the CS50 style gu
 pip install style50
 ```
 
-In order to style check C, C++, or Java code, a recent version (`>=3.0.1`) of `astyle` must be installed. `astyle` may be downloaded [here](https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/).
+In order to style check C, C++, or Java code, a recent version (`>=14.0.0`) of `clang-format` must be installed. `clang-format` may be downloaded [here](https://clang.llvm.org/docs/ClangFormat.html).
 
 ### Windows
 
