@@ -13,14 +13,9 @@ class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
     magic_names = [] # Only recognize C files by their extension
 
-    astyle = [
-        "astyle", "--ascii", "--add-braces", "--break-one-line-headers",
-        "--align-pointer=name", "--pad-comma", "--unpad-paren",
-        "--pad-header", "--pad-oper", "--max-code-length=132",
-        "--convert-tabs", "--indent=spaces=4",
-        "--indent-continuation=1", "--indent-switches",
-        "--lineend=linux", "--min-conditional-indent=1",
-        "--options=none", "--style=allman"
+    styleConfig = '{"UseTab":true,"IndentWidth":4,"BreakBeforeBraces":"Allman","AllowShortIfStatementsOnASingleLine":false,"IndentCaseLabels":false,"ColumnLimit":0}'
+    clangFormat = [
+        "clang-format", f"-style={styleConfig}"
     ]
 
     # Match (1) /**/ comments, and (2) // comments.
@@ -30,15 +25,15 @@ class C(StyleCheck):
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
 
     def __init__(self, code):
-        version_text = self.run(["astyle", "--version"])
+        version_text = self.run(["clang-format", "--version"])
         try:
-            # Match astyle version via regex.
-            version = re.match("Artistic Style Version (\d.+)", version_text).groups()[0]
+            # Match clang-format version via regex.
+            version = re.match("clang-format version (\d.+)", version_text).groups()[0]
         except IndexError:
-            raise Error("could not determine astyle version")
+            raise Error("could not determine clang-format version")
 
         if tuple(map(int, version.split("."))) < (3, 0, 1):
-            raise Error("style50 requires astyle version 3.0.1 or greater, "
+            raise Error("style50 requires clang-format version 16.0.0 or greater, "
                         "but version {} was found".format(version))
 
         # Call parent init.
@@ -50,7 +45,7 @@ class C(StyleCheck):
         return sum(1 for _ in self.match_comments.finditer(stripped))
 
     def style(self, code):
-        return self.run(self.astyle, input=code)
+        return self.run(self.clangFormat, input=code)
 
 
 class Python(StyleCheck):
@@ -98,7 +93,7 @@ class Js(C):
          ((?<![\*\/])\/(?![\/\*]).*?(?<![\\])\/) # JS regexes, trying hard not to be tripped up by comments
          """, re.VERBOSE)
 
-    # C.__init__ checks for astyle but we don't need this for Js
+    # C.__init__ checks for clang-format but we don't need this for Js
     __init__ = StyleCheck.__init__
 
     # TODO: Determine which options, if any should be passed here
@@ -115,4 +110,3 @@ class Js(C):
 class Java(C):
     extensions = ["java"]
     magic_names = ["Java source"]
-    astyle = C.astyle + ["--mode=java", "--style=java"]
