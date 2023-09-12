@@ -13,7 +13,7 @@ class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
     magic_names = [] # Only recognize C files by their extension
 
-    styleConfig = '{"UseTab":true,"IndentWidth":4,"BreakBeforeBraces":"Allman","AllowShortIfStatementsOnASingleLine":false,"IndentCaseLabels":false,"ColumnLimit":0}'
+    styleConfig = '{ AllowShortFunctionsOnASingleLine: Empty, BraceWrapping: { AfterCaseLabel: true, AfterControlStatement: true, AfterFunction: true, AfterStruct: true, BeforeElse: true, BeforeWhile: true }, BreakBeforeBraces: Custom, ColumnLimit: 132, IndentCaseLabels: true, IndentWidth: 4, SpaceAfterCStyleCast: true, TabWidth: 4 }'
     clangFormat = [
         "clang-format", f"-style={styleConfig}"
     ]
