@@ -25,16 +25,6 @@ class C(StyleCheck):
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
 
     def __init__(self, code):
-        version_text = self.run(["clang-format", "--version"])
-        try:
-            # Match clang-format version via regex.
-            version = re.match("clang-format version (\d.+)", version_text).groups()[0]
-        except IndexError:
-            raise Error("could not determine clang-format version")
-
-        if tuple(map(int, version.split("."))) < (3, 0, 1):
-            raise Error("style50 requires clang-format version 16.0.0 or greater, "
-                        "but version {} was found".format(version))
 
         # Call parent init.
         StyleCheck.__init__(self, code)
