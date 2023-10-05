@@ -100,3 +100,4 @@ class Js(C):
 class Java(C):
     extensions = ["java"]
     magic_names = ["Java source"]
+    clangFormat = C.clangFormat.copy() + ["-assume-filename=.java"]
