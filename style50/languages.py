@@ -3,7 +3,7 @@ import re
 import sys
 from tokenize import generate_tokens, STRING, INDENT, COMMENT, TokenError
 
-import autopep8
+import black
 import jsbeautifier
 
 from . import StyleCheck, Error
@@ -66,9 +66,9 @@ class Python(StyleCheck):
         """
         return len(code.splitlines())
 
-    # TODO: Determine which options (if any) should be passed to autopep8
+    # TODO: Determine which options (if any) should be passed to black
     def style(self, code):
-        return autopep8.fix_code(code, options={"max_line_length": 132, "ignore_local_config": True})
+        return black.format_str(code, mode=black.FileMode())
 
 
 class Js(C):
