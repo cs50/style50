@@ -19,7 +19,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "argparse",
-        "autopep8>=1.4.3",
+        "black>=23.10.0",
         "icdiff",
         "jsbeautifier",
         "pycodestyle==2.10.0",
@@ -40,6 +40,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.8.2",
+    version="2.9.0",
     include_package_data=True,
 )
