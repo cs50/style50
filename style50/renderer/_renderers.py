@@ -2,11 +2,12 @@ import json
 import pathlib
 
 import jinja2
-import pkg_resources
 import termcolor
 
+from importlib.resources import files
 
-TEMPLATES = pathlib.Path(pkg_resources.resource_filename("style50.renderer", "templates"))
+
+TEMPLATES = pathlib.Path(files("style50.renderer").joinpath("templates"))
 
 
 def to_ansi(files, score, version):

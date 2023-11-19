@@ -1,19 +1,16 @@
-from pkg_resources import get_distribution, DistributionNotFound
-import os
+import sys
+from importlib.metadata import PackageNotFoundError, version
 
-# https://stackoverflow.com/questions/17583443/what-is-the-correct-way-to-share-package-version-with-setup-py-and-the-package
+# Require Python 3.8+
+if sys.version_info < (3, 8):
+    sys.exit("You have an old version of python. Install version 3.8 or higher.")
+
+# Get version
 try:
-    _dist = get_distribution("style50")
-    # Normalize path for cross-OS compatibility.
-    _dist_loc = os.path.normcase(_dist.location)
-    _here = os.path.normcase(__file__)
-    if not _here.startswith(os.path.join(_dist_loc, "style50")):
-        # This version is not installed, but another version is.
-        raise DistributionNotFound
-except DistributionNotFound:
-    __version__ = "locally installed, no version information available"
-else:
-    __version__ = _dist.version
+    __version__ = version("style50")
+except PackageNotFoundError:
+    __version__ = "UNKNOWN"
+
 
 __all__ = ["Style50", "languages", "StyleCheck", "Error"]
 
