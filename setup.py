@@ -18,7 +18,6 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=[
-        "argparse",
         "autopep8>=2.0.0",
         "icdiff",
         "jsbeautifier",
@@ -40,6 +39,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.10.0",
+    version="2.10.1",
     include_package_data=True,
 )
