@@ -13,7 +13,7 @@ class C(StyleCheck):
     extensions = ["c", "h", "cpp", "hpp"]
     magic_names = [] # Only recognize C files by their extension
 
-    styleConfig = '{ AllowShortFunctionsOnASingleLine: Empty, BraceWrapping: { AfterCaseLabel: true, AfterControlStatement: true, AfterFunction: true, AfterStruct: true, BeforeElse: true, BeforeWhile: true }, BreakBeforeBraces: Custom, ColumnLimit: 132, IndentCaseLabels: true, IndentWidth: 4, SpaceAfterCStyleCast: true, TabWidth: 4 }'
+    styleConfig = '{ AllowShortFunctionsOnASingleLine: Empty, BraceWrapping: { AfterCaseLabel: true, AfterControlStatement: true, AfterFunction: true, AfterStruct: true, BeforeElse: true, BeforeWhile: true }, BreakBeforeBraces: Custom, ColumnLimit: 100, IndentCaseLabels: true, IndentWidth: 4, SpaceAfterCStyleCast: true, TabWidth: 4 }'
     clangFormat = [
         "clang-format", f"-style={styleConfig}"
     ]
@@ -68,7 +68,7 @@ class Python(StyleCheck):
 
     # TODO: Determine which options (if any) should be passed to autopep8
     def style(self, code):
-        return autopep8.fix_code(code, options={"max_line_length": 132, "ignore_local_config": True})
+        return autopep8.fix_code(code, options={"max_line_length": 100, "ignore_local_config": True})
 
 
 class Js(C):
@@ -91,7 +91,7 @@ class Js(C):
         opts = jsbeautifier.default_options()
         opts.end_with_newline = True
         opts.operator_position = "preserve-newline"
-        opts.wrap_line_length = 132
+        opts.wrap_line_length = 100
         opts.brace_style = "collapse,preserve-inline"
         opts.keep_array_indentation = True
         return jsbeautifier.beautify(code, opts)
