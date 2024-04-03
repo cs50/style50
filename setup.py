@@ -18,10 +18,11 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=[
-        "autopep8>=2.0.0",
+        "autopep8>=2.1.0",
+        "clang-format>=18.1.2",
         "icdiff",
         "jsbeautifier",
-        "pycodestyle==2.10.0",
+        "pycodestyle==2.11.1",
         "python-magic",
         "termcolor",
         "jinja2>=2.10",
@@ -39,6 +40,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.10.2",
+    version="2.10.3",
     include_package_data=True,
 )
