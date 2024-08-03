@@ -22,7 +22,7 @@ setup(
         "clang-format>=18.1.2",
         "icdiff",
         "jsbeautifier",
-        "pycodestyle==2.11.1",
+        "pycodestyle==2.12.0",
         "python-magic",
         "termcolor",
         "jinja2>=2.10",
@@ -40,6 +40,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.10.3",
+    version="2.10.4",
     include_package_data=True,
 )
