@@ -33,12 +33,13 @@ class Style50:
     # Dict that maps substrings of libmagic's outputs to classes. Used as fallback when file extension unrecognized
     magic_map = {}
 
-    def __init__(self, output="character"):
+    def __init__(self, output="character", clang_format_style=None):
 
         self._warn_chars = set()
+        self.clang_format_style = clang_format_style
 
         # Set run function as apropriate for output mode.
-        if output == "score":
+        if output in ["score", "format"]:
             self.diff = lambda old, new: ""
         elif output in ["json", "html"]:
             self.diff = self.html_diff
@@ -53,6 +54,11 @@ class Style50:
                 raise Error("invalid output type")
 
         self.output = output
+
+    def format_file(self, path):
+        """Format a single file and return the styled code."""
+        results = self._check(path)
+        return results.styled
 
     def run(self, *args, **kwargs):
         """Wraps Style50.check and renders the results using the renderer determined by self.output"""
@@ -163,6 +169,14 @@ class Style50:
                 code += '\n'
         except IndexError:
             pass
+
+        # Optional per-run configuration hook (e.g., clang-format style override)
+        if hasattr(check, "configure"):
+            try:
+                check.configure(clang_format_style=self.clang_format_style)
+            except TypeError:
+                # Backward compatible if configure() signature differs
+                check.configure()
 
         return check(code)
 

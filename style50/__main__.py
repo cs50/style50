@@ -32,7 +32,7 @@ def main():
     parser = argparse.ArgumentParser(prog="style50")
     parser.add_argument("file", metavar="FILE", nargs="+", help="file or directory to lint")
     parser.add_argument("-o", "--output", action="store", default="character",
-                        choices=["character", "split", "unified", "score", "json", "html"], metavar="MODE",
+                        choices=["character", "split", "unified", "score", "json", "html", "format"], metavar="MODE",
                         help="output mode, which can be character (default), split, unified, score, or json")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
@@ -43,10 +43,19 @@ def main():
                         help="print supported file extensions (as JSON list) and exit")
     parser.add_argument("-i", "--ignore", action="append", metavar="PATTERN",
                         help="paths/patterns to be ignored")
+    parser.add_argument("--clang-format-style", metavar="STYLE",
+                        help="clang-format style string or file:// URI (overrides default CS50 config)")
 
     args = parser.parse_args()
     ignore = args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
-    Style50(args.output).run(args.file, ignore=ignore)
+
+    if args.output == "format":
+        if len(args.file) != 1:
+            sys.exit("format mode requires exactly one file")
+        sys.stdout.write(Style50("format", clang_format_style=args.clang_format_style).format_file(args.file[0]))
+        return
+
+    Style50(args.output, clang_format_style=args.clang_format_style).run(args.file, ignore=ignore)
 
 
 

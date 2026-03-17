@@ -4,7 +4,9 @@ import sys
 from tokenize import generate_tokens, STRING, INDENT, COMMENT, TokenError
 
 import autopep8
+import cssbeautifier
 import jsbeautifier
+import sqlparse
 
 from . import StyleCheck, Error
 
@@ -17,6 +19,23 @@ class C(StyleCheck):
     clangFormat = [
         "clang-format", f"-style={styleConfig}"
     ]
+
+    _clang_format_style_override = None
+
+    @classmethod
+    def configure(cls, clang_format_style=None):
+        if clang_format_style is None:
+            cls._clang_format_style_override = None
+            return
+
+        # Guard against VS Code extension accidentally passing stringified undefined/null.
+        if isinstance(clang_format_style, str):
+            normalized = clang_format_style.strip().strip('"').strip("'").strip()
+            if normalized.lower() in {"", "undefined", "null", "none"}:
+                cls._clang_format_style_override = None
+                return
+
+        cls._clang_format_style_override = clang_format_style
 
     # Match (1) /**/ comments, and (2) // comments.
     match_comments = re.compile(r"(\/\*.*?\*\/)|(\/\/[^\n]*)", re.DOTALL)
@@ -35,6 +54,8 @@ class C(StyleCheck):
         return sum(1 for _ in self.match_comments.finditer(stripped))
 
     def style(self, code):
+        if self._clang_format_style_override:
+            return self.run(["clang-format", f"-style={self._clang_format_style_override}"], input=code)
         return self.run(self.clangFormat, input=code)
 
 
@@ -101,3 +122,32 @@ class Java(C):
     extensions = ["java"]
     magic_names = ["Java source"]
     clangFormat = C.clangFormat.copy() + ["-assume-filename=.java"]
+
+
+class Html(StyleCheck):
+    extensions = ["html"]
+    magic_names = ["HTML document"]
+
+    def style(self, code):
+        # djhtml reads from stdin when path is '-'
+        return self.run(["djhtml", "-"], input=code, exit=None)
+
+
+class Css(StyleCheck):
+    extensions = ["css"]
+    magic_names = []
+
+    def style(self, code):
+        opts = cssbeautifier.default_options()
+        opts.indent_size = 4
+        opts.end_with_newline = True
+        return cssbeautifier.beautify(code, opts)
+
+
+class Sql(StyleCheck):
+    extensions = ["sql"]
+    magic_names = []
+
+    def style(self, code):
+        # Keep this lightweight and dependency-minimal while producing stable formatting.
+        return sqlparse.format(code, reindent=True, keyword_case="upper", indent_width=4) + ("\n" if not code.endswith("\n") else "")
