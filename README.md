@@ -1,84 +1,70 @@
 # style50
-
-This is style50, a tool with which code can be checked against the CS50 style guide.
-
-## Installation
-
-```bash
-pip install style50
-```
-
-In order to style check C, C++, or Java code, a recent version (`>=14.0.0`) of `clang-format` must be installed. `clang-format` may be downloaded [here](https://clang.llvm.org/docs/ClangFormat.html).
-
-### Windows
-
-Along with most of CS50's command line tools, `style50` supports being run on Windows but only via the [Linux Subsystem in Windows 10](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide). After launching it, `style50` can be installed using the `pip` command above.
+style50 is a command-line tool with which you can check your code for consistency with [CS50’s style guide](https://cs50.readthedocs.io/style/c/) (for C)
 
 ## Usage
+This command-line tool that checks your code for consistency with the [CS50 Style Guide](https://cs50.readthedocs.io/style/c/). It highlights lines that need more (or fewer) spaces, incorrect indentation, and missing comments.
 
-```
-usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] file [file ...]
+To check the style of a file, run:
 
-positional arguments:
-file                  file or directory to lint
-
-optional arguments:
--h, --help            show this help message and exit
--o MODE, --output MODE
-                        output mode, which can be character (default), split,
-                        unified, score, or json
--v, --verbose         print full tracebacks of errors
--V, --version         show program's version number and exit
--E, --extensions      print supported file extensions (as JSON list) and
-                        exit
--i PATTERN, --ignore PATTERN
-                        paths/patterns to be ignored
+```bash
+style50 file.c
 ```
 
-`character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
+### Modes
 
-## Language Support
+By default, `style50` runs in **character** mode, but you can change the output format using the `-o` or `--output` flag.
 
-`style50` currently supports the following languages:
+#### 1\. Character Mode (Default)
 
-- C++
-- C
-- Python
-- Javascript
-- Java
+Highlights specific characters to add in green and characters to remove in red.
 
-### Adding a new language
-
-Adding a new language is very simple. Language checks are encoded as classes which inherit from the `StyleCheck` base class (see `style50/languages.py` for more real-world examples). The following is a template for style checks which allows style50 to check the imaginary FooBar language for style.
-
-```python
-import re
-
-from style50 import StyleCheck, Style50
-
-
-class FooBar(StyleCheck):
-
-    # REQUIRED: this property informs style50 what file extensions this
-    # check should be run on (in this case, all .fb and .foobar files)
-    extensions = ["fb", "foobar"]
-
-    # REQUIRED: should return a correctly styled version of `code`
-    def style(self, code):
-        # All FooBar code is perfectly styled
-        return code
-
-    # OPTIONAL: should return the number of comments in `code`.
-    # If this function is not defined, `style50` will not warn the student about
-    # too few comments
-    def count_comments(self, code):
-        # A real-world, check would need to worry about not counting '#' in string-literals
-        return len(re.findall(r"#.*", code))
+```bash
+style50 hello.c
 ```
 
-All classes which inherit from `StyleCheck` are automatically registered with `style50`'s `Style50` class, making style50 easily extensible. Adding the following to the above code creates a script which checks the code that `style50` already does as well as FooBar programs.
+#### 2\. Split Mode
 
-```python
-    # Style check the current directory, printing a unified diff
-    Style50("unified").run(["."])
+Displays your current code and the "correctly styled" version side-by-side.
+
+```bash
+style50 -o split hello.c
 ```
+
+#### 3\. Unified Mode
+
+Displays the style changes in a format similar to a `git diff`.
+
+```bash
+style50 -o unified hello.c
+```
+
+#### 4\. Score Mode
+
+Provides a simple percentage score of how well-styled your code is.
+
+```bash
+style50 -o score hello.c
+```
+
+### Supported Languages
+
+`style50` automatically detects the language based on the file extension. It currently supports:
+
+  * **C** (`.c`, `.h`)
+  * **C++** (`.cpp`, `.hpp`)
+  * **Java** (`.java`)
+  * **Python** (`.py`)
+  * **JavaScript** (`.js`)
+
+### CLI Options
+
+| Flag | Description |
+| :--- | :--- |
+| `-h`, `--help` | Show help message and exit. |
+| `-o MODE` | Set output mode (`character`, `split`, `unified`, `score`, `json`). |
+| `-v`, `--verbose` | Print full tracebacks for errors. |
+| `-V`, `--version` | Show program version. |
+
+
+
+> Go to [https://cs50.readthedocs.io/style50/](CS50 Docs) for more info.
