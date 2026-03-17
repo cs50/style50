@@ -35,6 +35,7 @@ def test_sql_formatter_runs():
     formatted = Sql(original).styled
     assert isinstance(formatted, str)
     assert "FROM" in formatted
+    assert formatted.endswith("\n")
 
 
 def test_html_formatter_invokes_djhtml(monkeypatch):
@@ -92,4 +93,12 @@ def test_clang_format_style_override_ignores_stringified_nulls(monkeypatch, valu
     _ = C("int main(){}\n", clang_format_style=value).styled
 
     assert seen["cmd"] == C.clangFormat
+
+
+def test_format_mode_run_raises_error():
+    from style50._api import Style50, Error
+
+    s = Style50("format")
+    with pytest.raises(Error, match="format mode does not support run"):
+        s.run(["nonexistent_file.py"])
 

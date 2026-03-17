@@ -62,6 +62,9 @@ class Style50:
 
     def run(self, *args, **kwargs):
         """Wraps Style50.check and renders the results using the renderer determined by self.output"""
+        if self.output == "format":
+            raise Error("format mode does not support run(); use format_file() instead")
+
         results = self.check(*args, **kwargs)
 
         if self.output == "html":

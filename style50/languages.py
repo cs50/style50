@@ -112,7 +112,8 @@ class Html(StyleCheck):
     magic_names = ["HTML document"]
 
     def style(self, code):
-        # djhtml reads from stdin when path is '-'
+        # djhtml returns exit 1 when it reformats (same convention as diff/black),
+        # so exit=None is required to avoid treating successful reformats as errors.
         return self.run(["djhtml", "-"], input=code, exit=None)
 
 
@@ -132,5 +133,7 @@ class Sql(StyleCheck):
     magic_names = []
 
     def style(self, code):
-        # Keep this lightweight and dependency-minimal while producing stable formatting.
-        return sqlparse.format(code, reindent=True, keyword_case="upper", indent_width=4) + ("\n" if not code.endswith("\n") else "")
+        formatted = sqlparse.format(code, reindent=True, keyword_case="upper", indent_width=4)
+        if not formatted.endswith("\n"):
+            formatted += "\n"
+        return formatted
