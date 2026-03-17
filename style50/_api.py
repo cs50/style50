@@ -1,18 +1,16 @@
 from abc import ABCMeta, abstractmethod
 import errno
 import difflib
-import fcntl
 import fnmatch
 import html
 import itertools
 import json
 import os
 import re
-import struct
+import shutil
 import subprocess
 import sys
 import tempfile
-from termios import TIOCGWINSZ
 
 import icdiff
 import magic
@@ -22,7 +20,7 @@ from . import __version__, renderer
 
 __all__ = ["Style50", "StyleCheck", "Error"]
 
-COLUMNS, LINES = os.get_terminal_size()
+COLUMNS, LINES = shutil.get_terminal_size(fallback=(80, 24))
 
 
 class Style50:

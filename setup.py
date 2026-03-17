@@ -40,6 +40,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.10.4",
+    version="2.11.0",
     include_package_data=True,
 )
