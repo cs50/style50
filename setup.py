@@ -30,6 +30,11 @@ setup(
         "termcolor",
         "jinja2>=2.10",
     ],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",

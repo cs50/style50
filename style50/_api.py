@@ -170,15 +170,7 @@ class Style50:
         except IndexError:
             pass
 
-        # Optional per-run configuration hook (e.g., clang-format style override)
-        if hasattr(check, "configure"):
-            try:
-                check.configure(clang_format_style=self.clang_format_style)
-            except TypeError:
-                # Backward compatible if configure() signature differs
-                check.configure()
-
-        return check(code)
+        return check(code, clang_format_style=self.clang_format_style)
 
     @staticmethod
     def split_diff(old, new):
@@ -311,7 +303,8 @@ class StyleCheck(metaclass=StyleMeta):
     # Contains substrings to be matched against libmagic's output if file extension not recognized
     magic_names = []
 
-    def __init__(self, code):
+    def __init__(self, code, **kwargs):
+        self._config = kwargs
         self.original = code
 
         comments = self.count_comments(code)
