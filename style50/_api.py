@@ -60,6 +60,32 @@ class Style50:
         results = self._check(path)
         return results.styled
 
+    def format_files_in_place(self, paths, ignore=[]):
+        """Format files and rewrite each path in place."""
+        try:
+            # Translate each ignore pattern into a regex and compile it
+            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
+        except re.error:
+            raise Error("failed to parse ignore pattern")
+
+        files = list(filter(lambda p: not any(reg.match(p) for reg in ignore),
+                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                          else (os.path.join(root, file)
+                                                                for root, _, files in os.walk(path)
+                                                                for file in files)
+                                                          for path in paths)))
+
+        for path in files:
+            try:
+                results = self._check(path)
+            except Error as e:
+                termcolor.cprint(f"{path}: {e.msg}", "red", file=sys.stderr)
+                continue
+
+            if results.original != results.styled:
+                with open(path, "w") as file:
+                    file.write(results.styled)
+
     def run(self, *args, **kwargs):
         """Wraps Style50.check and renders the results using the renderer determined by self.output"""
         if self.output == "format":

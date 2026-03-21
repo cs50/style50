@@ -34,6 +34,10 @@ def main():
     parser.add_argument("-o", "--output", action="store", default="character",
                         choices=["character", "split", "unified", "score", "json", "html", "format"], metavar="MODE",
                         help="output mode, which can be character (default), split, unified, score, json, html, or format")
+    parser.add_argument("-y", "--side-by-side", action="store_true",
+                        help="show side-by-side diff (equivalent to -o split)")
+    parser.add_argument("-i", "--in-place", action="store_true",
+                        help="rewrite files in place with style50 formatting")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print full tracebacks of errors")
     parser.add_argument("-V", "--version", action="version",
@@ -41,13 +45,25 @@ def main():
     parser.add_argument("-E", "--extensions", action="version",
                         version=json.dumps(list(Style50.extension_map.keys())),
                         help="print supported file extensions (as JSON list) and exit")
-    parser.add_argument("-i", "--ignore", action="append", metavar="PATTERN",
+    parser.add_argument("--ignore", action="append", metavar="PATTERN",
                         help="paths/patterns to be ignored")
     parser.add_argument("--clang-format-style", metavar="STYLE",
                         help="clang-format style string or file:// URI (overrides default CS50 config)")
 
     args = parser.parse_args()
     ignore = args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
+
+    if args.in_place and args.side_by_side:
+        sys.exit("--in-place cannot be combined with --side-by-side")
+
+    if args.side_by_side:
+        args.output = "split"
+
+    if args.in_place:
+        if args.output != "character":
+            sys.exit("--in-place cannot be combined with --output")
+        Style50("format", clang_format_style=args.clang_format_style).format_files_in_place(args.file, ignore=ignore)
+        return
 
     if args.output == "format":
         if len(args.file) != 1:
