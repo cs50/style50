@@ -60,22 +60,25 @@ class Style50:
         results = self._check(path)
         return results.styled
 
-    def format_files_in_place(self, paths, ignore=[]):
-        """Format files and rewrite each path in place."""
+    def _files_for_paths(self, paths, ignore=None):
+        """Expand files from paths and apply ignore patterns."""
+        ignore = ignore or []
         try:
             # Translate each ignore pattern into a regex and compile it
             ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
         except re.error:
             raise Error("failed to parse ignore pattern")
 
-        files = list(filter(lambda p: not any(reg.match(p) for reg in ignore),
-                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
-                                                          else (os.path.join(root, file)
-                                                                for root, _, files in os.walk(path)
-                                                                for file in files)
-                                                          for path in paths)))
+        return list(filter(lambda p: not any(reg.match(p) for reg in ignore),
+                           itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                         else (os.path.join(root, name)
+                                                               for root, _, names in os.walk(path)
+                                                               for name in names)
+                                                         for path in paths)))
 
-        for path in files:
+    def format_files_in_place(self, paths, ignore=None):
+        """Format files and rewrite each path in place."""
+        for path in self._files_for_paths(paths, ignore=ignore):
             try:
                 results = self._check(path)
             except Error as e:
@@ -115,19 +118,7 @@ class Style50:
         """
         Run checks on paths recursively, ignoring pataterns in ignore, returning a dict of results
         """
-        try:
-            # Translate each ignore pattern into a regex and compile it
-            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
-        except re.error:
-            raise Error("failed to parse ignore pattern")
-
-        # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
-        files = list(filter(lambda p: not any(reg.match(p) for reg in ignore),
-                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
-                                                          else (os.path.join(root, file)
-                                                                for root, _, files in os.walk(path)
-                                                                for file in files)
-                                                          for path in paths)))
+        files = self._files_for_paths(paths, ignore=ignore)
 
         diffs = 0
         lines = 0
