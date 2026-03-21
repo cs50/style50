@@ -2,7 +2,15 @@ import subprocess
 import sys
 
 
-def run_style50(args, *, cwd=None):
+def run_style50(args, *, cwd=None, env=None):
+    merged_env = None
+    if env is not None:
+        merged_env = dict(**env)
+        import os
+        baseline = os.environ.copy()
+        baseline.update(merged_env)
+        merged_env = baseline
+
     return subprocess.run(
         [sys.executable, "-m", "style50", *args],
         cwd=cwd,
@@ -10,6 +18,7 @@ def run_style50(args, *, cwd=None):
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=merged_env,
     )
 
 
@@ -109,6 +118,43 @@ def test_in_place_respects_ignore(tmp_path):
     proc = run_style50(["-i", "--ignore", "*skip.py", str(keep), str(skip)])
     assert proc.returncode == 0
 
+    assert "print(x)" in keep.read_text(encoding="utf-8")
+    assert "print(  y)" in skip.read_text(encoding="utf-8")
+
+
+def test_in_place_and_output_conflict(tmp_path):
+    f = tmp_path / "t.py"
+    f.write_text("x=1\nprint(  x)\n", encoding="utf-8")
+
+    proc = run_style50(["-i", "-o", "split", str(f)])
+    assert proc.returncode != 0
+    assert "--in-place cannot be combined with --output" in (proc.stdout + proc.stderr)
+
+
+def test_in_place_directory_input_and_ignore(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    keep = src / "keep.py"
+    skip = src / "skip.py"
+    keep.write_text("x=1\nprint(  x)\n", encoding="utf-8")
+    skip.write_text("y=1\nprint(  y)\n", encoding="utf-8")
+
+    proc = run_style50(["-i", "--ignore", "*skip.py", str(src)])
+    assert proc.returncode == 0
+    assert "print(x)" in keep.read_text(encoding="utf-8")
+    assert "print(  y)" in skip.read_text(encoding="utf-8")
+
+
+def test_in_place_respects_style50_ignore_env(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    keep = src / "keep.py"
+    skip = src / "skip.py"
+    keep.write_text("x=1\nprint(  x)\n", encoding="utf-8")
+    skip.write_text("y=1\nprint(  y)\n", encoding="utf-8")
+
+    proc = run_style50(["-i", str(src)], env={"STYLE50_IGNORE": "*skip.py"})
+    assert proc.returncode == 0
     assert "print(x)" in keep.read_text(encoding="utf-8")
     assert "print(  y)" in skip.read_text(encoding="utf-8")
 
