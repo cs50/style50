@@ -4,7 +4,9 @@ import sys
 from tokenize import generate_tokens, STRING, INDENT, COMMENT, TokenError
 
 import autopep8
+import cssbeautifier
 import jsbeautifier
+import sqlparse
 
 from . import StyleCheck, Error
 
@@ -24,17 +26,22 @@ class C(StyleCheck):
     # Matches string literals.
     match_literals = re.compile(r'"(?:\\.|[^"\\])*"', re.DOTALL)
 
-    def __init__(self, code):
-
-        # Call parent init.
-        StyleCheck.__init__(self, code)
-
     def count_comments(self, code):
         # Remove all string literals.
         stripped = self.match_literals.sub("", code)
         return sum(1 for _ in self.match_comments.finditer(stripped))
 
     def style(self, code):
+        clang_format_style = self._config.get("clang_format_style")
+        if isinstance(clang_format_style, str):
+            normalized = clang_format_style.strip().strip('"').strip("'").strip()
+            if normalized.lower() in {"", "undefined", "null", "none"}:
+                clang_format_style = None
+
+        if clang_format_style:
+            cmd = [c for c in self.clangFormat if not str(c).startswith("-style=")]
+            cmd.append(f"-style={clang_format_style}")
+            return self.run(cmd, input=code)
         return self.run(self.clangFormat, input=code)
 
 
@@ -83,9 +90,6 @@ class Js(C):
          ((?<![\*\/])\/(?![\/\*]).*?(?<![\\])\/) # JS regexes, trying hard not to be tripped up by comments
          """, re.VERBOSE)
 
-    # C.__init__ checks for clang-format but we don't need this for Js
-    __init__ = StyleCheck.__init__
-
     # TODO: Determine which options, if any should be passed here
     def style(self, code):
         opts = jsbeautifier.default_options()
@@ -101,3 +105,35 @@ class Java(C):
     extensions = ["java"]
     magic_names = ["Java source"]
     clangFormat = C.clangFormat.copy() + ["-assume-filename=.java"]
+
+
+class Html(StyleCheck):
+    extensions = ["html"]
+    magic_names = ["HTML document"]
+
+    def style(self, code):
+        # djhtml returns exit 1 when it reformats (same convention as diff/black),
+        # so exit=None is required to avoid treating successful reformats as errors.
+        return self.run(["djhtml", "-"], input=code, exit=None)
+
+
+class Css(StyleCheck):
+    extensions = ["css"]
+    magic_names = []
+
+    def style(self, code):
+        opts = cssbeautifier.default_options()
+        opts.indent_size = 4
+        opts.end_with_newline = True
+        return cssbeautifier.beautify(code, opts)
+
+
+class Sql(StyleCheck):
+    extensions = ["sql"]
+    magic_names = []
+
+    def style(self, code):
+        formatted = sqlparse.format(code, reindent=True, keyword_case="upper", indent_width=4)
+        if not formatted.endswith("\n"):
+            formatted += "\n"
+        return formatted

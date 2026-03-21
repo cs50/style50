@@ -33,12 +33,13 @@ class Style50:
     # Dict that maps substrings of libmagic's outputs to classes. Used as fallback when file extension unrecognized
     magic_map = {}
 
-    def __init__(self, output="character"):
+    def __init__(self, output="character", clang_format_style=None):
 
         self._warn_chars = set()
+        self.clang_format_style = clang_format_style
 
-        # Set run function as apropriate for output mode.
-        if output == "score":
+        # Set run function as appropriate for output mode.
+        if output in ["score", "format"]:
             self.diff = lambda old, new: ""
         elif output in ["json", "html"]:
             self.diff = self.html_diff
@@ -54,8 +55,50 @@ class Style50:
 
         self.output = output
 
+    def format_file(self, path):
+        """Format a single file and return the styled code."""
+        results = self._check(path)
+        return results.styled
+
+    def _files_for_paths(self, paths, ignore=None):
+        """Expand files from paths and apply ignore patterns."""
+        ignore = ignore or []
+        try:
+            # Translate each ignore pattern into a regex and compile it
+            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
+        except re.error:
+            raise Error("failed to parse ignore pattern")
+
+        return list(filter(lambda p: not any(reg.match(p) for reg in ignore),
+                           itertools.chain.from_iterable([path] if not os.path.isdir(path)
+                                                         else (os.path.join(root, name)
+                                                               for root, _, names in os.walk(path)
+                                                               for name in names)
+                                                         for path in paths)))
+
+    def format_files_in_place(self, paths, ignore=None):
+        """Format files and rewrite each path in place."""
+        formatted_count = 0
+        failed_count = 0
+        for path in self._files_for_paths(paths, ignore=ignore):
+            try:
+                results = self._check(path)
+            except Error as e:
+                termcolor.cprint(f"{path}: {e.msg}", "red", file=sys.stderr)
+                failed_count += 1
+                continue
+
+            if results.original != results.styled:
+                with open(path, "w", encoding="utf-8", newline="") as file:
+                    file.write(results.styled)
+                formatted_count += 1
+        return formatted_count, failed_count
+
     def run(self, *args, **kwargs):
         """Wraps Style50.check and renders the results using the renderer determined by self.output"""
+        if self.output == "format":
+            raise Error("format mode does not support run(); use format_file() instead")
+
         results = self.check(*args, **kwargs)
 
         if self.output == "html":
@@ -76,23 +119,11 @@ class Style50:
             print(render(**results))
 
 
-    def check(self, paths, ignore=[]):
+    def check(self, paths, ignore=None):
         """
-        Run checks on paths recursively, ignoring pataterns in ignore, returning a dict of results
+        Run checks on paths recursively, ignoring patterns in ignore, returning a dict of results
         """
-        try:
-            # Translate each ignore pattern into a regex and compile it
-            ignore = [re.compile(fnmatch.translate(i)) for i in ignore]
-        except re.error:
-            raise Error("failed to parse ignore pattern")
-
-        # Creates a generator of all the files found recursively in `paths`, filtering out any ignored paths.
-        files = list(filter(lambda p: not any(reg.match(p) for reg in ignore),
-                            itertools.chain.from_iterable([path] if not os.path.isdir(path)
-                                                          else (os.path.join(root, file)
-                                                                for root, _, files in os.walk(path)
-                                                                for file in files)
-                                                          for path in paths)))
+        files = self._files_for_paths(paths, ignore=ignore)
 
         diffs = 0
         lines = 0
@@ -132,7 +163,7 @@ class Style50:
 
     def _check(self, file):
         """
-        Run apropriate check based on `file`'s extension and return it,
+        Run appropriate check based on `file`'s extension and return it,
         otherwise raise an Error
         """
 
@@ -152,7 +183,7 @@ class Style50:
                 raise Error("unknown file type \"{}\", skipping...".format(file))
 
         try:
-            with open(file) as f:
+            with open(file, encoding="utf-8", newline="") as f:
                 code = "\n".join(line.rstrip() for line in f)
         except UnicodeDecodeError:
             raise Error("file does not seem to contain text, skipping...")
@@ -164,7 +195,7 @@ class Style50:
         except IndexError:
             pass
 
-        return check(code)
+        return check(code, clang_format_style=self.clang_format_style)
 
     @staticmethod
     def split_diff(old, new):
@@ -296,8 +327,13 @@ class StyleCheck(metaclass=StyleMeta):
 
     # Contains substrings to be matched against libmagic's output if file extension not recognized
     magic_names = []
+    CONFIG_KEYS = {"clang_format_style"}
 
-    def __init__(self, code):
+    def __init__(self, code, **kwargs):
+        unknown = set(kwargs) - self.CONFIG_KEYS
+        if unknown:
+            raise Error("unknown configuration option(s): {}".format(", ".join(sorted(unknown))))
+        self._config = kwargs
         self.original = code
 
         comments = self.count_comments(code)
@@ -352,7 +388,7 @@ class StyleCheck(metaclass=StyleMeta):
 
     def count_comments(self, code):
         """
-        Returns number of coments in `code`. If not implemented by child, will not warn about comments.
+        Returns number of comments in `code`. If not implemented by child, will not warn about comments.
         """
 
     @abstractmethod

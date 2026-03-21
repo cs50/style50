@@ -20,13 +20,21 @@ setup(
     install_requires=[
         "autopep8>=2.1.0",
         "clang-format>=18.1.2",
+        "cssbeautifier>=1.15.4",
+        "djhtml>=3.0",
         "icdiff",
         "jsbeautifier",
         "pycodestyle==2.12.0",
         "python-magic",
+        "sqlparse>=0.5.0",
         "termcolor",
         "jinja2>=2.10",
     ],
+    extras_require={
+        "test": [
+            "pytest",
+        ],
+    },
     dependency_links=["git+https://github.com/jeffkaufman/icdiff.git"],
     keywords=["style", "style50"],
     name="style50",
@@ -40,6 +48,6 @@ setup(
         ]
     },
     url="https://github.com/cs50/style50",
-    version="2.11.0",
+    version="3.0.0",
     include_package_data=True,
 )

@@ -17,25 +17,71 @@ Along with most of CS50's command line tools, `style50` supports being run on Wi
 ## Usage
 
 ```
-usage: style50 [-h] [-o MODE] [-v] [-V] [-E] [-i PATTERN] file [file ...]
+usage: style50 [-h] [-o MODE] [-y] [-i] [-v] [-V] [-E] [--ignore PATTERN]
+               [--clang-format-style STYLE]
+               FILE [FILE ...]
 
 positional arguments:
-file                  file or directory to lint
+FILE                  file or directory to lint
 
-optional arguments:
+options:
 -h, --help            show this help message and exit
--o MODE, --output MODE
-                        output mode, which can be character (default), split,
-                        unified, score, or json
+-o, --output MODE     output mode, which can be character (default), split,
+                      unified, score, json, html, or format
+-y, --side-by-side    show side-by-side diff (equivalent to -o split)
+-i, --in-place        rewrite files in place with style50 formatting
 -v, --verbose         print full tracebacks of errors
 -V, --version         show program's version number and exit
 -E, --extensions      print supported file extensions (as JSON list) and
-                        exit
--i PATTERN, --ignore PATTERN
-                        paths/patterns to be ignored
+                      exit
+--ignore PATTERN      paths/patterns to be ignored
+--clang-format-style STYLE
+                      clang-format style string or file:// URI (overrides
+                      default CS50 config)
 ```
 
-`character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, while `json` outputs a json object containing information pertinent to the CS50 IDE plugin (coming soon).
+`STYLE50_IGNORE` is also supported as a comma-separated environment variable fallback for ignore patterns.
+
+`character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, `json` outputs a JSON object containing structured results, `html` outputs browser-readable results, and `format` outputs only the formatted code.
+
+### Common examples
+
+```bash
+# Diff-only mode (default)
+style50 foo.c
+style50 foo.c bar.py
+style50 *.c *.py
+
+# In-place rewrite
+style50 -i foo.c
+style50 -i foo.c bar.py
+style50 -i *.c *.py
+
+# Side-by-side diff
+style50 -y foo.c bar.py
+
+# Ignore files/patterns
+style50 --ignore "*/.*" foo.c bar.py
+
+# Emit only formatted code (single file only)
+style50 -o format foo.c
+```
+
+### `--output` modes
+
+`--output` supports:
+
+- `character` (default)
+- `split`
+- `unified`
+- `score`
+- `json`
+- `html`
+- `format`
+
+### `-i` and `--output`
+
+`-i/--in-place` rewrites files and therefore cannot be combined with `--output` or `--side-by-side`.
 
 ## Language Support
 
@@ -46,6 +92,9 @@ optional arguments:
 - Python
 - Javascript
 - Java
+- HTML
+- CSS
+- SQL
 
 ### Adding a new language
 
