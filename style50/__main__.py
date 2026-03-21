@@ -31,7 +31,7 @@ def main():
     # Define command-line arguments.
     parser = argparse.ArgumentParser(prog="style50")
     parser.add_argument("file", metavar="FILE", nargs="+", help="file or directory to lint")
-    parser.add_argument("-o", "--output", action="store", default="character",
+    parser.add_argument("-o", "--output", action="store", default=None,
                         choices=["character", "split", "unified", "score", "json", "html", "format"], metavar="MODE",
                         help="output mode, which can be character (default), split, unified, score, json, html, or format")
     parser.add_argument("-y", "--side-by-side", action="store_true",
@@ -56,22 +56,27 @@ def main():
     if args.in_place and args.side_by_side:
         sys.exit("--in-place cannot be combined with --side-by-side")
 
+    if args.in_place and args.output is not None:
+        sys.exit("--in-place cannot be combined with --output")
+
+    output = args.output or "character"
+
     if args.side_by_side:
-        args.output = "split"
+        output = "split"
 
     if args.in_place:
-        if args.output != "character":
-            sys.exit("--in-place cannot be combined with --output")
-        Style50("format", clang_format_style=args.clang_format_style).format_files_in_place(args.file, ignore=ignore)
+        _, failures = Style50("format", clang_format_style=args.clang_format_style).format_files_in_place(args.file, ignore=ignore)
+        if failures:
+            sys.exit(1)
         return
 
-    if args.output == "format":
+    if output == "format":
         if len(args.file) != 1:
             sys.exit("format mode requires exactly one file")
         sys.stdout.write(Style50("format", clang_format_style=args.clang_format_style).format_file(args.file[0]))
         return
 
-    Style50(args.output, clang_format_style=args.clang_format_style).run(args.file, ignore=ignore)
+    Style50(output, clang_format_style=args.clang_format_style).run(args.file, ignore=ignore)
 
 
 

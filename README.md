@@ -40,6 +40,8 @@ options:
                       default CS50 config)
 ```
 
+`STYLE50_IGNORE` is also supported as a comma-separated environment variable fallback for ignore patterns.
+
 `character`, `split`, and `unified` modes output character-based, side-by-side, and unified (respectively) diffs between the inputted file and the correctly styled version. `score` outputs the raw percentage of correct (unchanged) lines, `json` outputs a JSON object containing structured results, `html` outputs browser-readable results, and `format` outputs only the formatted code.
 
 ### Common examples

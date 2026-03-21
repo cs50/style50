@@ -1,12 +1,14 @@
+import os
 import subprocess
 import sys
+
+import pytest
 
 
 def run_style50(args, *, cwd=None, env=None):
     merged_env = None
     if env is not None:
         merged_env = dict(**env)
-        import os
         baseline = os.environ.copy()
         baseline.update(merged_env)
         merged_env = baseline
@@ -131,6 +133,15 @@ def test_in_place_and_output_conflict(tmp_path):
     assert "--in-place cannot be combined with --output" in (proc.stdout + proc.stderr)
 
 
+def test_in_place_and_output_character_conflict(tmp_path):
+    f = tmp_path / "t.py"
+    f.write_text("x=1\nprint(  x)\n", encoding="utf-8")
+
+    proc = run_style50(["-i", "-o", "character", str(f)])
+    assert proc.returncode != 0
+    assert "--in-place cannot be combined with --output" in (proc.stdout + proc.stderr)
+
+
 def test_in_place_directory_input_and_ignore(tmp_path):
     src = tmp_path / "src"
     src.mkdir()
@@ -157,4 +168,39 @@ def test_in_place_respects_style50_ignore_env(tmp_path):
     assert proc.returncode == 0
     assert "print(x)" in keep.read_text(encoding="utf-8")
     assert "print(  y)" in skip.read_text(encoding="utf-8")
+
+
+def test_in_place_returns_nonzero_when_any_file_fails(tmp_path):
+    existing = tmp_path / "good.py"
+    missing = tmp_path / "missing.py"
+    existing.write_text("x=1\nprint(  x)\n", encoding="utf-8")
+
+    proc = run_style50(["-i", str(existing), str(missing)])
+    assert proc.returncode != 0
+    # Existing file should still be processed.
+    assert "print(x)" in existing.read_text(encoding="utf-8")
+
+
+def test_format_mode_html_css_sql(tmp_path):
+    html = tmp_path / "t.html"
+    css = tmp_path / "t.css"
+    sql = tmp_path / "t.sql"
+    html.write_text("<html><body><h1>x</h1></body></html>\n", encoding="utf-8")
+    css.write_text("body{color:red;}\n", encoding="utf-8")
+    sql.write_text("select * from users where id=1;\n", encoding="utf-8")
+
+    proc_html = run_style50(["-o", "format", str(html)])
+    # Skip only if djhtml is unavailable in this environment.
+    if proc_html.returncode != 0 and "requires djhtml" in (proc_html.stdout + proc_html.stderr):
+        pytest.skip("djhtml not installed in test environment")
+    assert proc_html.returncode == 0
+    assert proc_html.stdout.strip() != ""
+
+    proc_css = run_style50(["-o", "format", str(css)])
+    assert proc_css.returncode == 0
+    assert proc_css.stdout.strip() != ""
+
+    proc_sql = run_style50(["-o", "format", str(sql)])
+    assert proc_sql.returncode == 0
+    assert "SELECT" in proc_sql.stdout
 

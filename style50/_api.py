@@ -38,7 +38,7 @@ class Style50:
         self._warn_chars = set()
         self.clang_format_style = clang_format_style
 
-        # Set run function as apropriate for output mode.
+        # Set run function as appropriate for output mode.
         if output in ["score", "format"]:
             self.diff = lambda old, new: ""
         elif output in ["json", "html"]:
@@ -78,16 +78,21 @@ class Style50:
 
     def format_files_in_place(self, paths, ignore=None):
         """Format files and rewrite each path in place."""
+        formatted_count = 0
+        failed_count = 0
         for path in self._files_for_paths(paths, ignore=ignore):
             try:
                 results = self._check(path)
             except Error as e:
                 termcolor.cprint(f"{path}: {e.msg}", "red", file=sys.stderr)
+                failed_count += 1
                 continue
 
             if results.original != results.styled:
-                with open(path, "w") as file:
+                with open(path, "w", encoding="utf-8", newline="") as file:
                     file.write(results.styled)
+                formatted_count += 1
+        return formatted_count, failed_count
 
     def run(self, *args, **kwargs):
         """Wraps Style50.check and renders the results using the renderer determined by self.output"""
@@ -114,9 +119,9 @@ class Style50:
             print(render(**results))
 
 
-    def check(self, paths, ignore=[]):
+    def check(self, paths, ignore=None):
         """
-        Run checks on paths recursively, ignoring pataterns in ignore, returning a dict of results
+        Run checks on paths recursively, ignoring patterns in ignore, returning a dict of results
         """
         files = self._files_for_paths(paths, ignore=ignore)
 
@@ -158,7 +163,7 @@ class Style50:
 
     def _check(self, file):
         """
-        Run apropriate check based on `file`'s extension and return it,
+        Run appropriate check based on `file`'s extension and return it,
         otherwise raise an Error
         """
 
@@ -178,7 +183,7 @@ class Style50:
                 raise Error("unknown file type \"{}\", skipping...".format(file))
 
         try:
-            with open(file) as f:
+            with open(file, encoding="utf-8", newline="") as f:
                 code = "\n".join(line.rstrip() for line in f)
         except UnicodeDecodeError:
             raise Error("file does not seem to contain text, skipping...")
@@ -322,8 +327,12 @@ class StyleCheck(metaclass=StyleMeta):
 
     # Contains substrings to be matched against libmagic's output if file extension not recognized
     magic_names = []
+    CONFIG_KEYS = {"clang_format_style"}
 
     def __init__(self, code, **kwargs):
+        unknown = set(kwargs) - self.CONFIG_KEYS
+        if unknown:
+            raise Error("unknown configuration option(s): {}".format(", ".join(sorted(unknown))))
         self._config = kwargs
         self.original = code
 
@@ -379,7 +388,7 @@ class StyleCheck(metaclass=StyleMeta):
 
     def count_comments(self, code):
         """
-        Returns number of coments in `code`. If not implemented by child, will not warn about comments.
+        Returns number of comments in `code`. If not implemented by child, will not warn about comments.
         """
 
     @abstractmethod
