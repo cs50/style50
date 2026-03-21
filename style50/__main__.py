@@ -51,7 +51,7 @@ def main():
                         help="clang-format style string or file:// URI (overrides default CS50 config)")
 
     args = parser.parse_args()
-    ignore = args.ignore or filter(None, os.getenv("STYLE50_IGNORE", "").split(","))
+    ignore = args.ignore or list(filter(None, os.getenv("STYLE50_IGNORE", "").split(",")))
 
     if args.in_place and args.side_by_side:
         sys.exit("--in-place cannot be combined with --side-by-side")
